@@ -1,0 +1,18 @@
+import { readFile } from 'fs/promises'
+import path from 'path'
+
+export default defineEventHandler(async (event) => {
+  const query = getQuery(event)
+  const file = query.file
+
+  if (!file) return []
+
+  const jsonPath = path.join(process.cwd(), 'server/data/chats.json')
+
+  try {
+    const data = JSON.parse(await readFile(jsonPath, 'utf8'))
+    return data[file] || []
+  } catch {
+    return []
+  }
+})
