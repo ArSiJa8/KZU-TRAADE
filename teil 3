@@ -1,0 +1,20 @@
+import { unlink } from 'fs/promises'
+import path from 'path'
+
+export default defineEventHandler(async (event) => {
+  const body = await readBody<{ file?: string }>(event)
+
+  if (!body?.file) {
+    return { error: 'Keine Datei angegeben' }
+  }
+
+  const file = path.basename(body.file) // verhindert Pfad-Manipulation
+  const filePath = path.join(process.cwd(), 'public', 'uploads', file)
+
+  try {
+    await unlink(filePath)
+    return { success: true }
+  } catch {
+    return { error: 'Datei nicht gefunden oder bereits gelöscht' }
+  }
+})
