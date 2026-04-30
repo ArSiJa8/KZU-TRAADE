@@ -104,6 +104,14 @@ export default defineNuxtConfig({
     typeCheck: true
   },
 
+  vite: {
+    server: {
+      allowedHosts: [
+        'creational-zena-simulatively.ngrok-free.dev'
+      ]
+    }
+  },
+
   nitro: {
     compressPublicAssets: true
   }
