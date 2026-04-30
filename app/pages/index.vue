@@ -3,7 +3,9 @@
 </script>
 
 <template>
-<p>Hauptseite</p>
+<header>
+  <h1>KZU Trade</h1>
+</header>
 </template>
 
 <style scoped>
