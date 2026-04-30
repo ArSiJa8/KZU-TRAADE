@@ -1,0 +1,19 @@
+import jwt from 'jsonwebtoken'
+
+export default defineEventHandler((event) => {
+  const protectedRoutes = ['/api/delete']
+
+  if (!protectedRoutes.includes(event.path)) return
+
+  const token = getHeader(event, 'authorization')?.replace('Bearer ', '')
+
+  if (!token) {
+    throw createError({ statusCode: 401, statusMessage: 'Nicht eingeloggt' })
+  }
+
+  try {
+    jwt.verify(token, process.env.TOKEN_SECRET!)
+  } catch {
+    throw createError({ statusCode: 403, statusMessage: 'Token ungültig' })
+  }
+})
