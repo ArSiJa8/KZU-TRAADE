@@ -1,0 +1,36 @@
+{
+  "name": "KZU-TRAADE",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
+  },
+  "dependencies": {
+    "@ant-design-vue/nuxt": "1.4.6",
+    "@coremyslo/nuxt-icon-font": "1.2.0",
+    "@dargmuesli/nuxt-cookie-control": "9.1.22",
+    "@formkit/auto-animate": "0.9.0",
+    "@morev/vue-transitions": "3.0.5",
+    "@nuxt/a11y": "1.0.0-alpha.1",
+    "@nuxt/eslint": "1.15.2",
+    "@nuxt/hints": "1.0.3",
+    "@nuxt/image": "2.0.0",
+    "@nuxt/scripts": "1.0.4",
+    "@nuxt/ui": "4.7.1",
+    "@nuxtjs/device": "4.0.0",
+    "@nuxtjs/google-fonts": "3.2.0",
+    "@nuxtjs/html-validator": "2.1.0",
+    "@unhead/vue": "^2.1.13",
+    "ant-design-vue": "^4.2.6",
+    "eslint": "^10.2.1",
+    "nuxt": "^4.4.2",
+    "tailwindcss": "^4.2.4",
+    "typescript": "^6.0.3",
+    "vue": "^3.5.33",
+    "vue-router": "^5.0.6"
+  }
+}
