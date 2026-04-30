@@ -1,0 +1,15 @@
+import jwt from 'jsonwebtoken'
+
+export default defineEventHandler(async (event) => {
+  const body = await readBody(event)
+  const password = body?.password
+
+  if (!password) return { error: 'Kein Passwort angegeben' }
+  if (password !== process.env.ADMIN_PASSWORD) return { error: 'Falsches Passwort' }
+
+  const token = jwt.sign({ role: 'admin' }, process.env.TOKEN_SECRET!, {
+    expiresIn: '12h'
+  })
+
+  return { success: true, token }
+})
