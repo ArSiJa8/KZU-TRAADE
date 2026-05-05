@@ -1,3 +1,12 @@
+/*------------------------------------------------------------------
+1. Flexbox
+------------------------------------------------------------------ */
+
+
+
+/*------------------------------------------------------------------
+2. Transition Animation
+------------------------------------------------------------------- */
 .page-enter-active,
 .page-leave-active {
     transition:
@@ -30,11 +39,86 @@
     .page-leave-active {
         transition: none;
     }
-
     .page-enter-from,
     .page-leave-to {
         opacity: 1;
         transform: none;
         filter: none;
     }
+}
+
+/* ------------------------------------------------------------------
+3. Variables
+------------------------------------------------------------------- */
+:root {
+    /* Backgrounds */
+    --background: var(--blue-900);
+    --bg-surface: var(--neutral-800);
+    --bg-input: var(--neutral-100);
+
+    /* Text Colors */
+    --h1-color: var(--neutral-100);
+    --text-main: var(--neutral-200);
+    --text-muted: var(--neutral-400);
+
+    /* Brand/Accent */
+    --accent: var(--blue-500);
+    --accent-hover: var(--blue-600);
+    --accent-glow: var(--blue-900);
+
+    /* Status */
+    --success: var(--green-500);
+    --danger: var(--red-600);
+    --danger-hover: var(--red-700);
+    --danger-text: var(--neutral-100);
+
+    /* Buttons */
+    --btn-primary-bg: var(--accent);
+    --btn-primary-text: var(--neutral-400);
+    --btn-secondary-bg: var(--neutral-700);
+    --btn-secondary-text: var(--neutral-100);
+    --btn-secondary-hover: var(--neutral-600);
+
+    /* UI Elements */
+    --border: var(--neutral-700);
+}
+
+/* ------------------------------------------------------------------
+4. Global Styles
+------------------------------------------------------------------- */
+html {
+    background-color: var(--background);
+    color: var(--text-main);
+    font-family: 'Inter', sans-serif;
+}
+
+/* Typography Hierarchy */
+h1 { color: var(--h1-color); font-weight: 800; }
+h2, h3, h4, h5 { color: var(--text-main); }
+h6, .muted { color: var(--text-muted); }
+
+p {
+    color: var(--text-main);
+    line-height: 1.6;
+}
+
+/* Button Styling */
+button {
+    background-color: var(--btn-primary-bg);
+    color: var(--btn-primary-text);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+button:hover {
+    background-color: var(--accent-hover);
+    transform: translateY(-1px);
+}
+
+button:active {
+    transform: translateY(0);
 }

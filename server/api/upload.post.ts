@@ -15,8 +15,8 @@ export default defineEventHandler(async (event) => {
         return { error: 'Ungültiges Dateiformat' }
     }
 
-    if (file.data.length > 5 * 1024 * 1024) {
-        return { error: 'Datei zu groß (max. 5 MB)' }
+    if (file.data.length > 10 * 1024 * 1024) {
+        return { error: 'Datei zu groß (max. 10 MB)' }
     }
 
     const original = file.filename || 'bild'
