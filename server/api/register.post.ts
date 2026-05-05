@@ -16,6 +16,10 @@ function hashPassword(password: string) {
     return createHash('sha256').update(password).digest('hex')
 }
 
+function isAllowedKzuEmail(email: string) {
+    return /^[^\s@]+@([a-z0-9-]+\.)*kzu\.ch$/i.test(email)
+}
+
 async function readUsers(): Promise<User[]> {
     try {
         const content = await readFile(usersFile, 'utf-8')
@@ -45,9 +49,9 @@ export default defineEventHandler(async (event) => {
         }
     }
 
-    if (!email.includes('@')) {
+    if (!isAllowedKzuEmail(email)) {
         return {
-            error: 'Ungültige E-Mail'
+            error: 'Nur E-Mail-Adressen mit kzu.ch sind erlaubt'
         }
     }
 

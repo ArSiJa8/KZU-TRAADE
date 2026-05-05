@@ -1,82 +1,10 @@
 <template>
-  <div class="container">
+  <div id="upload" class="container">
     <h2>Foto hochladen</h2>
 
-    <div class="login-box">
-      <template v-if="!token">
-        <div class="auth-tabs">
-          <button
-              :class="{ active: authMode === 'login' }"
-              type="button"
-              @click="authMode = 'login'"
-          >
-            Login
-          </button>
-
-          <button
-              :class="{ active: authMode === 'register' }"
-              type="button"
-              @click="authMode = 'register'"
-          >
-            Registrieren
-          </button>
-        </div>
-
-        <template v-if="authMode === 'login'">
-          <input
-              v-model="loginValue"
-              type="text"
-              placeholder="Admin-Name oder E-Mail"
-              class="auth-input"
-              @keyup.enter="login"
-          >
-
-          <input
-              v-model="password"
-              type="password"
-              placeholder="Passwort"
-              class="auth-input"
-              @keyup.enter="login"
-          >
-
-          <button @click="login">
-            Einloggen
-          </button>
-        </template>
-
-        <template v-else>
-          <input
-              v-model="email"
-              type="email"
-              placeholder="E-Mail"
-              class="auth-input"
-              @keyup.enter="register"
-          >
-
-          <input
-              v-model="password"
-              type="password"
-              placeholder="Passwort"
-              class="auth-input"
-              @keyup.enter="register"
-          >
-
-          <button @click="register">
-            Account erstellen
-          </button>
-        </template>
-      </template>
-
-      <template v-else>
-        <p class="login-success">
-          Eingeloggt als {{ role === 'admin' ? 'Admin' : 'User' }}
-        </p>
-
-        <button class="logout-btn" @click="logout">
-          Ausloggen
-        </button>
-      </template>
-    </div>
+    <p v-if="token" class="login-success">
+      Eingeloggt als {{ role === 'admin' ? 'Admin' : 'User' }}
+    </p>
 
     <div v-if="token" class="upload-controls">
       <label for="file-upload" class="custom-file-upload">
@@ -99,7 +27,7 @@
     </div>
 
     <p v-else class="login-hint">
-      Bitte einloggen oder registrieren, um Bilder hochzuladen.
+      Bitte oben im Header einloggen oder registrieren, um Bilder hochzuladen.
     </p>
 
     <p v-if="file" class="file-info">
@@ -110,7 +38,7 @@
       <img :src="preview" class="preview" alt="Vorschau">
     </div>
 
-    <div class="gallery">
+    <div id="gallery" class="gallery">
       <div v-for="img in images" :key="img" class="item">
         <img :src="`/uploads/${img}`" alt="User Foto">
 
@@ -142,23 +70,17 @@ type ImagesResult = ApiResult & {
   images?: string[]
 }
 
-type LoginResult = ApiResult & {
-  token?: string
-  role?: 'admin' | 'user'
-  login?: string
-}
-
 const preview = ref<string | null>(null)
 const file = ref<File | null>(null)
 const images = ref<string[]>([])
-const authMode = ref<'login' | 'register'>('login')
-const loginValue = ref('')
-const email = ref('')
-const password = ref('')
-const token = ref<string | null>(null)
-const role = ref<'admin' | 'user' | null>(null)
+
+const token = useState<string | null>('authToken', () => null)
+const role = useState<'admin' | 'user' | null>('authRole', () => null)
+
 const uploadCooldown = ref(0)
 const isUploading = ref(false)
+
+let uploadCooldownInterval: ReturnType<typeof setInterval> | null = null
 
 const uploadButtonText = computed(() => {
   if (isUploading.value) {
@@ -171,8 +93,6 @@ const uploadButtonText = computed(() => {
 
   return 'Bild veröffentlichen'
 })
-
-let uploadCooldownInterval: ReturnType<typeof setInterval> | null = null
 
 onMounted(() => {
   token.value = localStorage.getItem('token')
@@ -189,65 +109,6 @@ onBeforeUnmount(() => {
     URL.revokeObjectURL(preview.value)
   }
 })
-
-async function register() {
-  const res = await $fetch<ApiResult>('/api/register', {
-    method: 'POST',
-    body: {
-      email: email.value,
-      password: password.value
-    }
-  })
-
-  if (res.error) {
-    alert(res.error)
-    return
-  }
-
-  alert('Registrierung erfolgreich. Du kannst dich jetzt einloggen.')
-
-  loginValue.value = email.value
-  email.value = ''
-  password.value = ''
-  authMode.value = 'login'
-}
-
-async function login() {
-  const res = await $fetch<LoginResult>('/api/login', {
-    method: 'POST',
-    body: {
-      login: loginValue.value,
-      password: password.value
-    }
-  })
-
-  if (res.error) {
-    alert(res.error)
-    return
-  }
-
-  if (!res.token || !res.role) {
-    alert('Kein Token erhalten')
-    return
-  }
-
-  token.value = res.token
-  role.value = res.role
-
-  localStorage.setItem('token', res.token)
-  localStorage.setItem('role', res.role)
-
-  loginValue.value = ''
-  password.value = ''
-}
-
-function logout() {
-  token.value = null
-  role.value = null
-
-  localStorage.removeItem('token')
-  localStorage.removeItem('role')
-}
 
 function previewImage(e: Event) {
   const target = e.target as HTMLInputElement
@@ -276,6 +137,7 @@ async function upload() {
   }
 
   if (!file.value) {
+    alert('Bitte zuerst eine Datei auswählen')
     return
   }
 
@@ -379,45 +241,8 @@ async function loadImages() {
   padding: 0 20px;
 }
 
-.login-box {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-  align-items: center;
-  margin: 0 auto 24px;
-  flex-wrap: wrap;
-}
-
-.auth-tabs {
-  display: flex;
-  gap: 8px;
-  width: 100%;
-  justify-content: center;
-}
-
-.auth-tabs button {
-  background-color: var(--btn-secondary-bg);
-  color: var(--btn-secondary-text);
-  border: 1px solid var(--border);
-}
-
-.auth-tabs button.active {
-  background-color: var(--btn-primary-bg);
-  color: var(--btn-primary-text);
-  border-color: var(--accent);
-}
-
-.auth-input {
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 10px 14px;
-  background: var(--bg-input);
-  color: var(--neutral-700);
-  font-size: 14px;
-}
-
 .login-success {
-  margin: 0;
+  margin: 0 0 20px;
   color: var(--success);
   font-weight: 600;
 }
@@ -427,18 +252,13 @@ async function loadImages() {
   margin-bottom: 20px;
 }
 
-.logout-btn {
-  background: transparent;
-  color: var(--text-muted);
-  border: 1px solid var(--border);
-}
-
 .upload-controls {
   display: flex;
   gap: 12px;
   justify-content: center;
   align-items: center;
   margin-bottom: 10px;
+  flex-wrap: wrap;
 }
 
 #file-upload {
