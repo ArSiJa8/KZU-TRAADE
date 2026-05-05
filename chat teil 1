@@ -1,0 +1,30 @@
+<template>
+  <div class="container">
+    <h1>Bild‑Chats</h1>
+
+    <div class="grid">
+      <div v-for="img in images" :key="img" class="item">
+        <img :src="`/uploads/${img}`" />
+        <NuxtLink :to="`/chat/${img}`" class="btn">Chat öffnen</NuxtLink>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+const images = ref([])
+
+function loadImages() {
+  const context = import.meta.glob('/public/uploads/*', { eager: true })
+  images.value = Object.keys(context).map((p) => p.split('/').pop())
+}
+
+onMounted(loadImages)
+</script>
+
+<style scoped>
+.container { padding: 20px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
+.item img { width: 100%; border-radius: 10px; }
+.btn { display: block; margin-top: 10px; padding: 8px; background: #007bff; color: white; text-align: center; border-radius: 6px; }
+</style>
