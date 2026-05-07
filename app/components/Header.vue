@@ -259,15 +259,15 @@ function logout() {
   position: sticky;
   top: 0;
   z-index: 100;
-  min-height: 72px;
   display: flex;
+  height: 40px;
   align-items: center;
   justify-content: space-between;
   gap: 24px;
   padding: 14px clamp(18px, 4vw, 56px);
   background: color-mix(in srgb, var(--background) 82%, transparent);
   border-bottom: 1px solid var(--border);
-  backdrop-filter: blur(18px);
+  backdrop-filter: blur(25px) saturate(180%);
 }
 
 .logo {
@@ -276,6 +276,8 @@ function logout() {
   font-size: clamp(1.25rem, 2vw, 1.8rem);
   font-weight: 800;
   letter-spacing: -0.04em;
+  mix-blend-mode: difference;
+  isolation: isolate;
 }
 
 .header-content {
@@ -291,7 +293,7 @@ function logout() {
 }
 
 .nav a {
-  color: var(--text-muted);
+  color: var(--neutral-200);
   text-decoration: none;
   font-weight: 600;
   transition: color 0.2s ease;
@@ -325,7 +327,7 @@ function logout() {
 
 .logout-btn {
   background: transparent;
-  color: var(--text-muted);
+  color: var(--text-main);
   border: 1px solid var(--border);
 }
 
@@ -350,15 +352,15 @@ function logout() {
 }
 
 .auth-tabs button {
-  background: var(--btn-secondary-bg);
-  color: var(--btn-secondary-text);
+  background: from var(--neutral-700);
+  color: var(--blue-400);
   border: 1px solid var(--border);
 }
 
 .auth-tabs button.active {
   background: var(--btn-primary-bg);
   color: var(--btn-primary-text);
-  border-color: var(--accent);
+  border-color: var(--blue-500);
 }
 
 .auth-panel input {

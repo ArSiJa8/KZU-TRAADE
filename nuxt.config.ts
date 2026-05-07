@@ -3,7 +3,7 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
 
   devtools: {
-    enabled: false
+    enabled: true
   },
 
   css: [
@@ -24,7 +24,9 @@ export default defineNuxtConfig({
     '@morev/vue-transitions',
     '@nuxtjs/device',
     '@nuxtjs/google-fonts',
-    '@nuxtjs/html-validator'
+    '@nuxtjs/html-validator',
+    'motion-v/nuxt',
+    'v-gsap-nuxt'
   ],
 
   app: {

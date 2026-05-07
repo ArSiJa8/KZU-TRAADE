@@ -62,8 +62,8 @@
     --text-muted: var(--neutral-400);
 
     /* Brand/Accent */
-    --accent: var(--blue-500);
-    --accent-hover: var(--blue-600);
+    --accent: #0073ff;
+    --accent-hover: #0d56ad;
     --accent-glow: var(--blue-900);
 
     /* Status */
@@ -74,7 +74,7 @@
 
     /* Buttons */
     --btn-primary-bg: var(--accent);
-    --btn-primary-text: var(--neutral-400);
+    --btn-primary-text: var(--neutral-200);
     --btn-secondary-bg: var(--neutral-700);
     --btn-secondary-text: var(--neutral-100);
     --btn-secondary-hover: var(--neutral-600);
@@ -104,7 +104,7 @@ p {
 
 /* Button Styling */
 button {
-    background-color: var(--btn-primary-bg);
+    background-color: var(--accent);
     color: var(--btn-primary-text);
     border: none;
     padding: 10px 20px;

@@ -6,7 +6,7 @@
   <div class="hero">
     <p>KZU Trade</p>
   </div>
-  <div class="transition"></div>
+
 </template>
 
 <style scoped>
@@ -16,11 +16,13 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100vh;
+  height: 90vh;
   background-image: url("~/assets/imgs/Hero-BG.png");
   background-size: cover;
   background-position: center;
   color: var(--text-main);
+  position: relative;
+  z-index: 1;
 }
 
 .hero p {
