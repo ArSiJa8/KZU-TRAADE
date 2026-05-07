@@ -346,4 +346,9 @@ button:disabled {
   background: var(--danger-hover);
   transform: scale(1.05);
 }
+
+.up-top {
+  z-index: 3;
+  margin-top: -70px;
+}
 </style>
