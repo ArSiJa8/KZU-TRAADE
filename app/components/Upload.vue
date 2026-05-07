@@ -1,5 +1,5 @@
 <template>
-  <div id="upload" class="container">
+  <div id="upload" class="container up-top">
     <h2>Foto hochladen</h2>
 
     <p v-if="token" class="login-success">
