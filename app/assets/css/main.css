@@ -90,6 +90,7 @@ html {
     background-color: var(--background);
     color: var(--text-main);
     font-family: 'Inter', sans-serif;
+    scroll-behavior: smooth;
 }
 
 /* Typography Hierarchy */
@@ -122,3 +123,7 @@ button:hover {
 button:active {
     transform: translateY(0);
 }
+
+/*---------------------------------------------------------------------------
+5.
+ */

@@ -1,1 +1,15 @@
-[]
+[
+  {
+    "id": "1778588416748_0irxp83qco8",
+    "title": "FSCG Logo",
+    "description": "Relativ neu",
+    "category": "Anderes",
+    "images": [
+      "1778588416748_g1cgnuwh7p4.png"
+    ],
+    "mainImage": "1778588416748_g1cgnuwh7p4.png",
+    "ownerEmail": "phil.sennhauser@stud.kzu.ch",
+    "ownerName": "Phil Sennhauser",
+    "createdAt": "2026-05-12T12:20:16.749Z"
+  }
+]
