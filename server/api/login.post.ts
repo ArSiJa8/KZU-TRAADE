@@ -7,7 +7,7 @@ type User = {
     id: string
     email: string
     passwordHash: string
-    role: 'user'
+    role: 'admin' | 'user'
 }
 
 const usersFile = path.join(process.cwd(), 'server', 'data', 'users.json')
@@ -88,7 +88,7 @@ export default defineEventHandler(async (event) => {
     const token = jwt.sign(
         {
             login: user.email,
-            role: 'user'
+            role: user.role
         },
         process.env.TOKEN_SECRET,
         {
@@ -99,7 +99,7 @@ export default defineEventHandler(async (event) => {
     return {
         success: true,
         token,
-        role: 'user',
+        role: user.role,
         login: user.email
     }
 })

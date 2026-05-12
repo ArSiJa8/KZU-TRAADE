@@ -1,0 +1,20 @@
+[
+  {
+    "id": "c637cd30-122b-4f4c-bd7e-f03ef2bc8d93",
+    "email": "phil.sennhauser@stud.kzu.ch",
+    "passwordHash": "192c4c60f632f75b4334695a72adcaea3537c7e8ae16a6da9eb3a3b506abf65d",
+    "role": "admin"
+  },
+  {
+    "id": "214da06d-89bb-4c1e-ad3b-367a4e5e9f51",
+    "email": "phise2011@icloud.com",
+    "passwordHash": "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4",
+    "role": "user"
+  },
+  {
+    "id": "3cbbdc3b-4d5c-4ea0-bca7-2e002d5e9626",
+    "email": "silvan.hofstetter@stud.kzu.ch",
+    "passwordHash": "5a1268aec2b1b49681d6656435c044e02117f7c167deba1b47744654fb238be0",
+    "role": "admin"
+  }
+]

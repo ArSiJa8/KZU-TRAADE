@@ -4,7 +4,7 @@
 
 <template>
   <div class="hero">
-    <p>KZU Trade</p>
+    <h1>KZU Trade</h1>
   </div>
 
 </template>
@@ -25,7 +25,7 @@
   z-index: 1;
 }
 
-.hero p {
+.hero h1 {
   margin: 0;
   font-family: 'Roboto', sans-serif;
   font-size: clamp(3rem, 12vw, 15rem);

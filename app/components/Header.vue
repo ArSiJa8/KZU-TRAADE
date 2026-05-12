@@ -14,6 +14,8 @@ type LoginResult = ApiResult & {
 
 const token = useState<string | null>('authToken', () => null)
 const role = useState<'admin' | 'user' | null>('authRole', () => null)
+const loginName = useState<string | null>('authLogin', () => null)
+const newPostOpen = useState('newPostOpen', () => false)
 
 const menuOpen = ref(false)
 const authOpen = ref(false)
@@ -31,6 +33,7 @@ const isLoggedIn = computed(() => Boolean(token.value))
 onMounted(() => {
   token.value = localStorage.getItem('token')
   role.value = localStorage.getItem('role') as 'admin' | 'user' | null
+  loginName.value = localStorage.getItem('login')
 })
 
 function closeMenus() {
@@ -53,11 +56,6 @@ function showAuthError(message: string) {
   })
 }
 
-function switchAuthMode(mode: 'login' | 'register') {
-  authMode.value = mode
-  clearAuthError()
-}
-
 async function register() {
   clearAuthError()
 
@@ -70,7 +68,7 @@ async function register() {
   })
 
   if (res.error) {
-    alert(res.error)
+    showAuthError(res.error)
     return
   }
 
@@ -83,6 +81,8 @@ async function register() {
 }
 
 async function login() {
+  clearAuthError()
+
   const res = await $fetch<LoginResult>('/api/login', {
     method: 'POST',
     body: {
@@ -92,20 +92,22 @@ async function login() {
   })
 
   if (res.error) {
-    alert(res.error)
+    showAuthError(res.error)
     return
   }
 
-  if (!res.token || !res.role) {
-    alert('Kein Token erhalten')
+  if (!res.token || !res.role || !res.login) {
+    showAuthError('Keine vollständigen Login-Daten erhalten')
     return
   }
 
   token.value = res.token
   role.value = res.role
+  loginName.value = res.login
 
   localStorage.setItem('token', res.token)
   localStorage.setItem('role', res.role)
+  localStorage.setItem('login', res.login)
 
   loginValue.value = ''
   password.value = ''
@@ -113,12 +115,21 @@ async function login() {
   menuOpen.value = false
 }
 
+function openNewPost() {
+  newPostOpen.value = true
+  menuOpen.value = false
+  authOpen.value = false
+}
+
 function logout() {
   token.value = null
   role.value = null
+  loginName.value = null
+  newPostOpen.value = false
 
   localStorage.removeItem('token')
   localStorage.removeItem('role')
+  localStorage.removeItem('login')
 
   closeMenus()
 }
@@ -147,9 +158,7 @@ function logout() {
           Home
         </NuxtLink>
 
-        <a href="#upload" @click="closeMenus">
-          Upload
-        </a>
+
 
         <a href="#gallery" @click="closeMenus">
           Galerie
@@ -158,6 +167,10 @@ function logout() {
         <a href="#about" @click="closeMenus">
           Über uns
         </a>
+
+        <button class="nav-button" type="button" @click="openNewPost">
+          Neuer Post
+        </button>
       </nav>
 
       <div class="auth-area">
@@ -212,6 +225,7 @@ function logout() {
                   v-model="password"
                   type="password"
                   placeholder="Passwort"
+                  @input="clearAuthError"
                   @keyup.enter="login"
               >
 
@@ -225,6 +239,7 @@ function logout() {
                   v-model="email"
                   type="email"
                   placeholder="E-Mail@kzu.ch"
+                  @input="clearAuthError"
                   @keyup.enter="register"
               >
 
@@ -292,15 +307,38 @@ function logout() {
   gap: 18px;
 }
 
-.nav a {
+.nav a,
+.nav-button {
   color: var(--neutral-200);
   text-decoration: none;
   font-weight: 600;
   transition: color 0.2s ease;
 }
 
+.nav-button {
+  padding: 8px 14px;
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+  border: 1px solid var(--blue-500);
+  border-radius: 15px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
 .nav a:hover {
   color: var(--neutral-100);
+}
+
+.nav-button:hover {
+  color: var(--btn-primary-text);
+  background: var(--btn-primary-hover);
+  border-color: var(--blue-400);
+  transform: translateY(-1px);
 }
 
 .auth-area {
@@ -352,7 +390,7 @@ function logout() {
 }
 
 .auth-tabs button {
-  background: from var(--neutral-700);
+  background: var(--neutral-700);
   color: var(--blue-400);
   border: 1px solid var(--border);
 }
@@ -464,10 +502,19 @@ function logout() {
     gap: 8px;
   }
 
-  .nav a {
+  .nav a,
+  .nav-button {
     padding: 12px;
     border-radius: 12px;
     background: var(--bg-surface);
+    text-align: left;
+  }
+
+  .nav-button {
+    background: var(--btn-primary-bg);
+    color: var(--btn-primary-text);
+    border: 1px solid var(--blue-500);
+    text-align: center;
   }
 
   .auth-area {
@@ -479,5 +526,23 @@ function logout() {
     position: static;
     width: 100%;
   }
+}
+
+.close-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: var(--danger);
+  color: var(--danger-text);
+  border-radius: 999px;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  cursor: pointer;
+  font-size: 22px;
+  line-height: 1;
 }
 </style>

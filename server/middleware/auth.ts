@@ -29,14 +29,7 @@ export default defineEventHandler((event) => {
     }
 
     try {
-        const payload = jwt.verify(token, process.env.TOKEN_SECRET) as TokenPayload
-
-        if (event.path === '/api/delete' && payload.role !== 'admin') {
-            throw createError({
-                statusCode: 403,
-                statusMessage: 'Nur Admins dürfen Bilder löschen'
-            })
-        }
+        jwt.verify(token, process.env.TOKEN_SECRET) as TokenPayload
     } catch (error) {
         if (error && typeof error === 'object' && 'statusCode' in error) {
             throw error
