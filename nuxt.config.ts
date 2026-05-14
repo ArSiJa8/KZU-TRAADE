@@ -117,5 +117,9 @@ export default defineNuxtConfig({
 
   nitro: {
     compressPublicAssets: true
+  },
+
+  runtimeConfig: {
+    tokenSecret: process.env.TOKEN_SECRET || '' // Default value from .env or env var, can be overridden by NUXT_TOKEN_SECRET
   }
 })

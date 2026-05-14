@@ -6,13 +6,16 @@ type TokenPayload = {
 }
 
 export default defineEventHandler((event) => {
+    const config = useRuntimeConfig(event)
+    const tokenSecret = config.tokenSecret
+
     const protectedRoutes = ['/api/upload', '/api/delete']
 
     if (!protectedRoutes.includes(event.path)) {
         return
     }
 
-    if (!process.env.TOKEN_SECRET) {
+    if (!tokenSecret) {
         throw createError({
             statusCode: 500,
             statusMessage: 'Server ist nicht richtig konfiguriert'
@@ -29,7 +32,7 @@ export default defineEventHandler((event) => {
     }
 
     try {
-        jwt.verify(token, process.env.TOKEN_SECRET) as TokenPayload
+        jwt.verify(token, tokenSecret) as TokenPayload
     } catch (error) {
         if (error && typeof error === 'object' && 'statusCode' in error) {
             throw error

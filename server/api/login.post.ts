@@ -30,6 +30,9 @@ async function readUsers(): Promise<User[]> {
 }
 
 export default defineEventHandler(async (event) => {
+    const config = useRuntimeConfig(event)
+    const tokenSecret = config.tokenSecret
+
     const body = await readBody<{
         login?: string
         password?: string
@@ -44,7 +47,7 @@ export default defineEventHandler(async (event) => {
         }
     }
 
-    if (!process.env.TOKEN_SECRET) {
+    if (!tokenSecret) {
         return {
             error: 'Server ist nicht richtig konfiguriert'
         }
@@ -56,7 +59,7 @@ export default defineEventHandler(async (event) => {
                 login: 'admin',
                 role: 'admin'
             },
-            process.env.TOKEN_SECRET,
+            tokenSecret,
             {
                 expiresIn: '12h'
             }
@@ -90,7 +93,7 @@ export default defineEventHandler(async (event) => {
             login: user.email,
             role: user.role
         },
-        process.env.TOKEN_SECRET,
+        tokenSecret,
         {
             expiresIn: '12h'
         }

@@ -52,7 +52,10 @@ async function writePosts(posts: TradePost[]) {
 }
 
 export default defineEventHandler(async (event) => {
-    if (!process.env.TOKEN_SECRET) {
+    const config = useRuntimeConfig(event)
+    const tokenSecret = config.tokenSecret
+
+    if (!tokenSecret) {
         return {
             error: 'Server ist nicht richtig konfiguriert'
         }
@@ -69,7 +72,7 @@ export default defineEventHandler(async (event) => {
     let payload: TokenPayload
 
     try {
-        payload = jwt.verify(token, process.env.TOKEN_SECRET) as TokenPayload
+        payload = jwt.verify(token, tokenSecret) as TokenPayload
     } catch {
         return {
             error: 'Token ungültig'
