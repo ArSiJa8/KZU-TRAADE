@@ -120,7 +120,7 @@ export default defineNuxtConfig({
   },
 
   runtimeConfig: {
-    tokenSecret: process.env.TOKEN_SECRET || '' // Default value from .env or env var, can be overridden by NUXT_TOKEN_SECRET
+    tokenSecret: process.env.TOKEN_SECRET || ''
   },
 
   sentry: {
@@ -130,13 +130,5 @@ export default defineNuxtConfig({
 
   sourcemap: {
     client: 'hidden'
-  }
-
-  {
-    "mcpServers": {
-      "Sentry": {
-        "url": "https://mcp.sentry.dev/mcp/arsija-studios/javascript-nuxt"
-      }
-    }
   }
 })
