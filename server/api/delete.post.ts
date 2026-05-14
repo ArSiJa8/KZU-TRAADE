@@ -7,7 +7,7 @@ type TokenPayload = {
     role: 'admin' | 'user'
 }
 
-type TradeCategory = 'Schulmaterial' | 'Stifte' | 'Anderes'
+type TradeCategory = 'Schulmaterial' | 'Stifte' | 'Bücher' | 'Sportmaterialien' | 'Anderes'
 
 type TradePost = {
     id: string

@@ -1,7 +1,7 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 
-type TradeCategory = 'Schulmaterial' | 'Stifte' | 'Anderes'
+type TradeCategory = 'Schulmaterial' | 'Stifte' | 'Bücher' | 'Sportmaterialien' | 'Anderes'
 
 type TradePost = {
     id: string
@@ -30,8 +30,6 @@ export default defineEventHandler(async () => {
     await mkdir(path.dirname(postsFile), { recursive: true })
 
     const posts = await readPosts()
-
-    await writeFile(postsFile, JSON.stringify(posts, null, 2))
 
     return {
         success: true,

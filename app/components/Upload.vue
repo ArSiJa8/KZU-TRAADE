@@ -464,6 +464,9 @@ async function upload() {
     newPostOpen.value = false
 
     await loadPosts()
+  } catch (err: any) {
+    const message = err.data?.statusMessage || err.statusMessage || err.message || 'Ein Fehler ist aufgetreten'
+    alert(`Upload fehlgeschlagen: ${message}`)
   } finally {
     isUploading.value = false
   }
@@ -506,26 +509,31 @@ async function remove(id: string) {
     return
   }
 
-  const res = await $fetch<ApiResult>('/api/delete', {
-    method: 'POST',
-    body: {
-      id
-    },
-    headers: {
-      Authorization: `Bearer ${token.value}`
+  try {
+    const res = await $fetch<ApiResult>('/api/delete', {
+      method: 'POST',
+      body: {
+        id
+      },
+      headers: {
+        Authorization: `Bearer ${token.value}`
+      }
+    })
+
+    if (res.error) {
+      alert(res.error)
+      return
     }
-  })
 
-  if (res.error) {
-    alert(res.error)
-    return
+    if (selectedPost.value?.id === id) {
+      selectedPost.value = null
+    }
+
+    await loadPosts()
+  } catch (err: any) {
+    const message = err.data?.statusMessage || err.statusMessage || err.message || 'Löschen fehlgeschlagen'
+    alert(`Fehler beim Löschen: ${message}`)
   }
-
-  if (selectedPost.value?.id === id) {
-    selectedPost.value = null
-  }
-
-  await loadPosts()
 }
 
 async function loadPosts() {

@@ -26,7 +26,8 @@ export default defineNuxtConfig({
     '@nuxtjs/google-fonts',
     '@nuxtjs/html-validator',
     'motion-v/nuxt',
-    'v-gsap-nuxt'
+    'v-gsap-nuxt',
+    '@sentry/nuxt/module'
   ],
 
   app: {
@@ -83,7 +84,6 @@ export default defineNuxtConfig({
     download: true
   },
 
-
   htmlValidator: {
     logLevel: 'warning',
     failOnError: false
@@ -121,5 +121,22 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     tokenSecret: process.env.TOKEN_SECRET || '' // Default value from .env or env var, can be overridden by NUXT_TOKEN_SECRET
+  },
+
+  sentry: {
+    org: 'arsija-studios',
+    project: 'javascript-nuxt'
+  },
+
+  sourcemap: {
+    client: 'hidden'
+  }
+
+  {
+    "mcpServers": {
+      "Sentry": {
+        "url": "https://mcp.sentry.dev/mcp/arsija-studios/javascript-nuxt"
+      }
+    }
   }
 })

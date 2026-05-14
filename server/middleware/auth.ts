@@ -9,9 +9,10 @@ export default defineEventHandler((event) => {
     const config = useRuntimeConfig(event)
     const tokenSecret = config.tokenSecret
 
+    const { pathname } = getRequestURL(event)
     const protectedRoutes = ['/api/upload', '/api/delete']
 
-    if (!protectedRoutes.includes(event.path)) {
+    if (!protectedRoutes.includes(pathname)) {
         return
     }
 

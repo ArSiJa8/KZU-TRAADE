@@ -59,60 +59,70 @@ function showAuthError(message: string) {
 async function register() {
   clearAuthError()
 
-  const res = await $fetch<ApiResult>('/api/register', {
-    method: 'POST',
-    body: {
-      email: email.value,
-      password: password.value
+  try {
+    const res = await $fetch<ApiResult>('/api/register', {
+      method: 'POST',
+      body: {
+        email: email.value,
+        password: password.value
+      }
+    })
+
+    if (res.error) {
+      showAuthError(res.error)
+      return
     }
-  })
 
-  if (res.error) {
-    showAuthError(res.error)
-    return
+    alert('Registrierung erfolgreich. Du kannst dich jetzt einloggen.')
+
+    loginValue.value = email.value
+    email.value = ''
+    password.value = ''
+    authMode.value = 'login'
+  } catch (err: any) {
+    const message = err.data?.statusMessage || err.statusMessage || err.message || 'Registrierung fehlgeschlagen'
+    showAuthError(message)
   }
-
-  alert('Registrierung erfolgreich. Du kannst dich jetzt einloggen.')
-
-  loginValue.value = email.value
-  email.value = ''
-  password.value = ''
-  authMode.value = 'login'
 }
 
 async function login() {
   clearAuthError()
 
-  const res = await $fetch<LoginResult>('/api/login', {
-    method: 'POST',
-    body: {
-      login: loginValue.value,
-      password: password.value
+  try {
+    const res = await $fetch<LoginResult>('/api/login', {
+      method: 'POST',
+      body: {
+        login: loginValue.value,
+        password: password.value
+      }
+    })
+
+    if (res.error) {
+      showAuthError(res.error)
+      return
     }
-  })
 
-  if (res.error) {
-    showAuthError(res.error)
-    return
+    if (!res.token || !res.role || !res.login) {
+      showAuthError('Keine vollständigen Login-Daten erhalten')
+      return
+    }
+
+    token.value = res.token
+    role.value = res.role
+    loginName.value = res.login
+
+    localStorage.setItem('token', res.token)
+    localStorage.setItem('role', res.role)
+    localStorage.setItem('login', res.login)
+
+    loginValue.value = ''
+    password.value = ''
+    authOpen.value = false
+    menuOpen.value = false
+  } catch (err: any) {
+    const message = err.data?.statusMessage || err.statusMessage || err.message || 'Login fehlgeschlagen'
+    showAuthError(message)
   }
-
-  if (!res.token || !res.role || !res.login) {
-    showAuthError('Keine vollständigen Login-Daten erhalten')
-    return
-  }
-
-  token.value = res.token
-  role.value = res.role
-  loginName.value = res.login
-
-  localStorage.setItem('token', res.token)
-  localStorage.setItem('role', res.role)
-  localStorage.setItem('login', res.login)
-
-  loginValue.value = ''
-  password.value = ''
-  authOpen.value = false
-  menuOpen.value = false
 }
 
 function openNewPost() {

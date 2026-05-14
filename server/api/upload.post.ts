@@ -7,7 +7,7 @@ type TokenPayload = {
     role: 'admin' | 'user'
 }
 
-type TradeCategory = 'Schulmaterial' | 'Stifte' | 'Anderes'
+type TradeCategory = 'Schulmaterial' | 'Stifte' | 'Bücher' | 'Sportmaterialien' | 'Anderes'
 
 type TradePost = {
     id: string
@@ -93,7 +93,7 @@ export default defineEventHandler(async (event) => {
     const mainImageIndexRaw = form.find((item) => item.name === 'mainImageIndex')?.data.toString()
     const rulesAccepted = form.find((item) => item.name === 'rulesAccepted')?.data.toString() === 'true'
 
-    const allowedCategories: TradeCategory[] = ['Schulmaterial', 'Stifte', 'Anderes']
+    const allowedCategories: TradeCategory[] = ['Schulmaterial', 'Stifte', 'Bücher', 'Sportmaterialien', 'Anderes']
 
     if (!title) {
         return {
