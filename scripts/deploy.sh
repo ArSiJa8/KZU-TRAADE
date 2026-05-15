@@ -53,6 +53,7 @@ ln -s "$DATA_DIR" "$PROJECT_DIR/server/data"
 
 # 5. Restart application
 echo "Restarting application with PM2..."
-pm2 reload "$APP_NAME" || pm2 restart "$APP_NAME"
+# Try to reload (zero downtime), if it fails, try to start it fresh
+pm2 reload "$APP_NAME" || pm2 start .output/server/index.mjs --name "$APP_NAME"
 
 echo "--- Deployment successful at $(date) ---"
