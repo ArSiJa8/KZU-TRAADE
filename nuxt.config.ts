@@ -116,7 +116,10 @@ export default defineNuxtConfig({
   },
 
   nitro: {
-    compressPublicAssets: true
+    compressPublicAssets: true,
+    experimental: {
+      openAPI: true
+    }
   },
 
   runtimeConfig: {

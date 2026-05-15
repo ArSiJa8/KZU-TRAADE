@@ -465,7 +465,16 @@ async function upload() {
 
     await loadPosts()
   } catch (err: any) {
-    const message = err.data?.statusMessage || err.statusMessage || err.message || 'Ein Fehler ist aufgetreten'
+    console.error('Upload error:', err)
+    
+    let message = 'Ein Fehler ist aufgetreten'
+    
+    if (err.status === 413) {
+      message = 'Die hochgeladenen Bilder sind insgesamt zu groß für den Server (max. 20MB gesamt).'
+    } else {
+      message = err.data?.statusMessage || err.statusMessage || err.message || message
+    }
+    
     alert(`Upload fehlgeschlagen: ${message}`)
   } finally {
     isUploading.value = false

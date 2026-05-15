@@ -26,10 +26,10 @@ async function readPosts(): Promise<TradePost[]> {
     }
 }
 
-export default defineEventHandler(async () => {
+export default defineEventHandler(async () => { 
     await mkdir(path.dirname(postsFile), { recursive: true })
 
-    const posts = await readPosts()
+    const posts = await readPosts(); 
 
     return {
         success: true,

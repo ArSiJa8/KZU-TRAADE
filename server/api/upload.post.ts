@@ -79,7 +79,7 @@ export default defineEventHandler(async (event) => {
         }
     }
 
-    const form = await readMultipartFormData(event)
+     const form = await readMultipartFormData(event); 
 
     if (!form?.length) {
         return {
@@ -142,22 +142,22 @@ export default defineEventHandler(async (event) => {
     }
 
     const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads')
+    const uploadDir = path.resolve('public/uploads'); 
 
-    await mkdir(uploadDir, { recursive: true })
+     await mkdir(uploadDir, { recursive: true }); 
 
     const savedImages: string[] = []
 
-    for (const file of files) {
+     for (const file of files) {
         if (!allowed.includes(file.type || '')) {
             return {
                 error: 'Ungültiges Dateiformat'
             }
         }
 
-        if (file.data.length > 10 * 1024 * 1024) {
+        if (file.data.length > 20 * 1024 * 1024) {
             return {
-                error: 'Eine Datei ist zu groß (max. 10 MB)'
+                error: 'Eine Datei ist zu groß (max. 20 MB)'
             }
         }
 
@@ -166,7 +166,7 @@ export default defineEventHandler(async (event) => {
         const newName = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`
         const uploadPath = path.join(uploadDir, newName)
 
-        await writeFile(uploadPath, file.data)
+         await writeFile(uploadPath, file.data)
         savedImages.push(newName)
     }
 
@@ -199,7 +199,7 @@ export default defineEventHandler(async (event) => {
     const posts = await readPosts()
     posts.unshift(post)
 
-    await writePosts(posts)
+      await writePosts(posts);  
 
     return {
         success: true,
