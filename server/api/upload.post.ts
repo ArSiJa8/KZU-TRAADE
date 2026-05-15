@@ -142,7 +142,17 @@ export default defineEventHandler(async (event) => {
     }
 
     const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
-    const uploadDir = path.resolve('public/uploads'); 
+    
+    // In production (Nitro), static files are served from .output/public
+    // We try to find the correct path to save files so they are immediately accessible
+    const isProd = process.env.NODE_ENV === 'production'
+    let uploadDir = path.resolve('public/uploads')
+    
+    if (isProd) {
+        // Check if we are running in the .output directory structure
+        const prodPath = path.resolve('.output/public/uploads')
+        uploadDir = prodPath
+    }
 
      await mkdir(uploadDir, { recursive: true }); 
 
