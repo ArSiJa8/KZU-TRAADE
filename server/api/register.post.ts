@@ -7,6 +7,9 @@ type User = {
     email: string
     passwordHash: string
     role: 'user'
+    verified: boolean
+    verificationToken?: string
+    verificationTokenExpiry?: number
 }
 
 const dataDir = path.join(process.cwd(), 'server', 'data')
@@ -14,6 +17,10 @@ const usersFile = path.join(dataDir, 'users.json')
 
 function hashPassword(password: string) {
     return createHash('sha256').update(password).digest('hex')
+}
+
+function generateVerificationToken() {
+    return randomUUID()
 }
 
 function isAllowedKzuEmail(email: string) {
@@ -32,6 +39,19 @@ async function readUsers(): Promise<User[]> {
 async function writeUsers(users: User[]) {
     await mkdir(dataDir, { recursive: true })
     await writeFile(usersFile, JSON.stringify(users, null, 2))
+}
+
+// Einfache E-Mail-Funktion (mit nodemailer oder service)
+async function sendVerificationEmail(email: string, token: string) {
+    // Beispiel mit einem E-Mail-Service
+    // In Production: nodemailer oder SendGrid verwenden
+    const verificationUrl = `${process.env.PUBLIC_URL || 'http://localhost:3000'}/verify-email?token=${token}`
+    
+    console.log(`Verification email would be sent to ${email}`)
+    console.log(`Verification URL: ${verificationUrl}`)
+    
+    // Hier würde der echte E-Mail-Versand stattfinden
+    return true
 }
 
 export default defineEventHandler(async (event) => {
@@ -69,16 +89,27 @@ export default defineEventHandler(async (event) => {
         }
     }
 
-    users.push({
+    const verificationToken = generateVerificationToken()
+    const verificationTokenExpiry = Date.now() + (24 * 60 * 60 * 1000) // 24 Stunden
+
+    const newUser: User = {
         id: randomUUID(),
         email,
         passwordHash: hashPassword(password),
-        role: 'user'
-    })
+        role: 'user',
+        verified: false,
+        verificationToken,
+        verificationTokenExpiry
+    }
 
+    users.push(newUser)
     await writeUsers(users)
 
+    // Sende Bestätigungs-E-Mail
+    await sendVerificationEmail(email, verificationToken)
+
     return {
-        success: true
+        success: true,
+        message: 'Registrierung erfolgreich. Bitte bestätige deine E-Mail-Adresse.'
     }
 })
