@@ -178,6 +178,10 @@ function logout() {
           Über uns
         </a>
 
+        <NuxtLink v-if="role === 'admin'" to="/admin" @click="closeMenus">
+          Admin
+        </NuxtLink>
+
         <button class="nav-button" type="button" @click="openNewPost">
           Neuer Post
         </button>
