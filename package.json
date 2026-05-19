@@ -47,6 +47,9 @@
   "pnpm": {
     "overrides": {
       "@vercel/nft": "^0.27.4"
-    }
+    },
+    "onlyBuiltDependencies": [
+      "@sentry/cli"
+    ]
   }
 }
