@@ -1,0 +1,10 @@
+allowBuilds:
+  '@morev/vue-transitions': true
+  '@parcel/watcher': true
+  '@sentry/cli': true
+  core-js: true
+  esbuild: true
+  sharp: true
+  ttf2woff2: true
+  unrs-resolver: true
+  vue-demi: true
