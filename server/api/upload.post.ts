@@ -1,27 +1,6 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
-import jwt from 'jsonwebtoken'
-
-type TokenPayload = {
-    login: string
-    role: 'admin' | 'user'
-}
-
-type TradeCategory = 'Schulmaterial' | 'Stifte' | 'Bücher' | 'Sportmaterialien' | 'Anderes'
-
-type TradePost = {
-    id: string
-    title: string
-    description: string
-    category: TradeCategory
-    images: string[]
-    mainImage: string
-    ownerEmail: string
-    ownerName: string
-    createdAt: string
-}
-
-const postsFile = path.join(process.cwd(), 'server', 'data', 'posts.json')
+import type { Post, TradeCategory } from '../utils/repositories/types'
 
 function getUserNameFromEmail(email: string) {
     if (email === 'admin') {
@@ -37,54 +16,14 @@ function getUserNameFromEmail(email: string) {
         .join(' ')
 }
 
-async function readPosts(): Promise<TradePost[]> {
-    try {
-        const content = await readFile(postsFile, 'utf-8')
-        return JSON.parse(content) as TradePost[]
-    } catch {
-        return []
-    }
-}
-
-async function writePosts(posts: TradePost[]) {
-    await mkdir(path.dirname(postsFile), { recursive: true })
-    await writeFile(postsFile, JSON.stringify(posts, null, 2))
-}
-
 export default defineEventHandler(async (event) => {
-    const config = useRuntimeConfig(event)
-    const tokenSecret = config.tokenSecret
+    // Auth is already checked by middleware
+    const payload = event.context.auth!
 
-    if (!tokenSecret) {
-        return {
-            error: 'Server ist nicht richtig konfiguriert'
-        }
-    }
-
-    const token = getHeader(event, 'authorization')?.replace('Bearer ', '')
-
-    if (!token) {
-        return {
-            error: 'Bitte zuerst einloggen'
-        }
-    }
-
-    let payload: TokenPayload
-
-    try {
-        payload = jwt.verify(token, tokenSecret) as TokenPayload
-    } catch {
-        return {
-            error: 'Token ungültig'
-        }
-    }
-
-     const form = await readMultipartFormData(event); 
+    const form = await readMultipartFormData(event); 
 
     if (!form?.length) {
-        return {
-            error: 'Keine Daten erhalten'
-        }
+        throw createError({ statusCode: 400, statusMessage: 'Keine Daten erhalten' })
     }
 
     const title = form.find((item) => item.name === 'title')?.data.toString().trim()
@@ -95,80 +34,47 @@ export default defineEventHandler(async (event) => {
 
     const allowedCategories: TradeCategory[] = ['Schulmaterial', 'Stifte', 'Bücher', 'Sportmaterialien', 'Anderes']
 
-    if (!title) {
-        return {
-            error: 'Bitte einen Titel eingeben'
-        }
-    }
-
-    if (!description) {
-        return {
-            error: 'Bitte eine Beschreibung eingeben'
-        }
-    }
-
-    if (!category || !allowedCategories.includes(category)) {
-        return {
-            error: 'Bitte eine gültige Kategorie auswählen'
-        }
+    if (!title || !description || !category || !allowedCategories.includes(category)) {
+        throw createError({ statusCode: 400, statusMessage: 'Bitte alle Pflichtfelder korrekt ausfüllen' })
     }
 
     if (!rulesAccepted) {
-        return {
-            error: 'Bitte zuerst die Regeln akzeptieren'
-        }
+        throw createError({ statusCode: 400, statusMessage: 'Bitte zuerst die Regeln akzeptieren' })
     }
 
     const files = form.filter((item) => item.name === 'files' && item.filename)
 
-    if (!files.length) {
-        return {
-            error: 'Bitte mindestens ein Bild auswählen'
-        }
-    }
-
-    if (files.length > 8) {
-        return {
-            error: 'Maximal 8 Bilder erlaubt'
-        }
+    if (!files.length || files.length > 8) {
+        throw createError({ statusCode: 400, statusMessage: 'Bitte 1 bis 8 Bilder auswählen' })
     }
 
     const mainImageIndex = Number(mainImageIndexRaw ?? 0)
 
     if (!Number.isInteger(mainImageIndex) || mainImageIndex < 0 || mainImageIndex >= files.length) {
-        return {
-            error: 'Ungültiges Hauptbild'
-        }
+        throw createError({ statusCode: 400, statusMessage: 'Ungültiges Hauptbild' })
     }
 
     const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
     
-    // In production (Nitro), static files are served from .output/public
-    // We try to find the correct path to save files so they are immediately accessible
     const isProd = process.env.NODE_ENV === 'production'
     let uploadDir = path.resolve('public/uploads')
     
     if (isProd) {
-        // Check if we are running in the .output directory structure
         const prodPath = path.resolve('.output/public/uploads')
         uploadDir = prodPath
     }
 
-     await mkdir(uploadDir, { recursive: true }); 
+    await mkdir(uploadDir, { recursive: true }); 
 
     const savedImages: string[] = []
 
-     for (const file of files) {
+    for (const file of files) {
         if (!allowed.includes(file.type || '')) {
-            return {
-                error: 'Ungültiges Dateiformat'
-            }
+            throw createError({ statusCode: 400, statusMessage: 'Ungültiges Dateiformat' })
         }
 
         if (file.data.length > 20 * 1024 * 1024) {
-            return {
-                error: 'Eine Datei ist zu groß (max. 20 MB)'
-            }
+            throw createError({ statusCode: 400, statusMessage: 'Eine Datei ist zu groß (max. 20 MB)' })
         }
 
         const original = file.filename || 'bild'
@@ -176,25 +82,13 @@ export default defineEventHandler(async (event) => {
         const newName = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`
         const uploadPath = path.join(uploadDir, newName)
 
-         await writeFile(uploadPath, file.data)
+        await writeFile(uploadPath, file.data)
         savedImages.push(newName)
     }
 
     const mainImage = savedImages[mainImageIndex]
 
-    if (!mainImage) {
-        return {
-            error: 'Ungültiges Hauptbild'
-        }
-    }
-
-	if (!savedImages.length) {
-		return {
-			error: 'Keine Bilder gespeichert'
-		}
-	}
-
-    const post: TradePost = {
+    const newPost: Post = {
         id: `${Date.now()}_${Math.random().toString(36).slice(2)}`,
         title,
         description,
@@ -206,13 +100,10 @@ export default defineEventHandler(async (event) => {
         createdAt: new Date().toISOString()
     }
 
-    const posts = await readPosts()
-    posts.unshift(post)
-
-      await writePosts(posts);  
+    await postRepository.create(newPost)
 
     return {
         success: true,
-        post
+        post: newPost
     }
 })

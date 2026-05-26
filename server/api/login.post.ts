@@ -1,32 +1,8 @@
-import { readFile } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
-import path from 'node:path'
 import jwt from 'jsonwebtoken'
-
-type User = {
-    id: string
-    email: string
-    passwordHash: string
-    role: 'admin' | 'user'
-}
-
-const usersFile = path.join(process.cwd(), 'server', 'data', 'users.json')
 
 function hashPassword(password: string) {
     return createHash('sha256').update(password).digest('hex')
-}
-
-function isAllowedKzuEmail(email: string) {
-    return /^[^\s@]+@([a-z0-9-]+\.)*kzu\.ch$/i.test(email)
-}
-
-async function readUsers(): Promise<User[]> {
-    try {
-        const content = await readFile(usersFile, 'utf-8')
-        return JSON.parse(content) as User[]
-    } catch {
-        return []
-    }
 }
 
 export default defineEventHandler(async (event) => {
@@ -42,67 +18,32 @@ export default defineEventHandler(async (event) => {
     const password = body.password
 
     if (!login || !password) {
-        return {
-            error: 'Login und Passwort angeben'
-        }
+        throw createError({ statusCode: 400, statusMessage: 'Login und Passwort angeben' })
     }
 
     if (!tokenSecret) {
-        return {
-            error: 'Server ist nicht richtig konfiguriert'
-        }
+        throw createError({ statusCode: 500, statusMessage: 'Token Secret nicht konfiguriert' })
     }
 
-    if (login === 'admin' && password === 'Passwort') {
-        const token = jwt.sign(
-            {
-                login: 'admin',
-                role: 'admin'
-            },
-            tokenSecret,
-            {
-                expiresIn: '12h'
-            }
-        )
+    const user = await userRepository.getByEmail(login)
 
-        return {
-            success: true,
-            token,
-            role: 'admin',
-            login: 'admin'
-        }
+    if (!user) {
+        throw createError({ statusCode: 401, statusMessage: 'Ungültige Anmeldedaten' })
     }
 
-    if (!isAllowedKzuEmail(login)) {
-        return {
-            error: 'Nur E-Mail-Adressen mit kzu.ch sind erlaubt'
-        }
-    }
-
-    const users = await readUsers()
-    const user = users.find((item) => item.email === login)
-
-    if (!user || user.passwordHash !== hashPassword(password)) {
-        return {
-            error: 'Falsche Login-Daten'
-        }
+    if (user.passwordHash !== hashPassword(password)) {
+        throw createError({ statusCode: 401, statusMessage: 'Ungültige Anmeldedaten' })
     }
 
     const token = jwt.sign(
-        {
-            login: user.email,
-            role: user.role
-        },
+        { login: user.email, role: user.role },
         tokenSecret,
-        {
-            expiresIn: '12h'
-        }
+        { expiresIn: '7d' }
     )
 
     return {
-        success: true,
         token,
         role: user.role,
-        login: user.email
+        email: user.email
     }
 })

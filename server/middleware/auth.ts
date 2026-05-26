@@ -5,14 +5,25 @@ type TokenPayload = {
     role: 'admin' | 'user'
 }
 
+declare module 'h3' {
+    interface H3EventContext {
+        auth?: TokenPayload
+    }
+}
+
 export default defineEventHandler((event) => {
     const config = useRuntimeConfig(event)
     const tokenSecret = config.tokenSecret
 
     const { pathname } = getRequestURL(event)
-    const protectedRoutes = ['/api/upload', '/api/delete']
 
-    if (!protectedRoutes.includes(pathname)) {
+    // Routes that require at least 'user' role
+    const userProtectedRoutes = ['/api/upload', '/api/delete', '/api/create-post']
+    
+    // Routes that require 'admin' role
+    const isAdminRoute = pathname.startsWith('/api/admin/')
+
+    if (!isAdminRoute && !userProtectedRoutes.some(route => pathname.startsWith(route))) {
         return
     }
 
@@ -33,15 +44,23 @@ export default defineEventHandler((event) => {
     }
 
     try {
-        jwt.verify(token, tokenSecret) as TokenPayload
+        const payload = jwt.verify(token, tokenSecret) as TokenPayload
+        event.context.auth = payload
+
+        if (isAdminRoute && payload.role !== 'admin') {
+            throw createError({
+                statusCode: 403,
+                statusMessage: 'Administrator-Rechte erforderlich'
+            })
+        }
     } catch (error) {
         if (error && typeof error === 'object' && 'statusCode' in error) {
             throw error
         }
 
         throw createError({
-            statusCode: 403,
-            statusMessage: 'Token ungültig'
+            statusCode: 401,
+            statusMessage: 'Sitzung abgelaufen oder Token ungültig'
         })
     }
 })

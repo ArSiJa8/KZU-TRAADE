@@ -1,34 +1,5 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { randomUUID } from 'node:crypto'
-import path from 'node:path'
-
-type Post = {
-  id: string
-  title: string
-  description: string
-  category: 'feature' | 'bug' | 'design' | 'other'
-  wishes?: string // Neues Feld für Wünsche
-  author: string
-  createdAt: number
-  updatedAt: number
-}
-
-const dataDir = path.join(process.cwd(), 'server', 'data')
-const postsFile = path.join(dataDir, 'posts.json')
-
-async function readPosts(): Promise<Post[]> {
-  try {
-    const content = await readFile(postsFile, 'utf-8')
-    return JSON.parse(content) as Post[]
-  } catch {
-    return []
-  }
-}
-
-async function writePosts(posts: Post[]) {
-  await mkdir(dataDir, { recursive: true })
-  await writeFile(postsFile, JSON.stringify(posts, null, 2))
-}
+import type { Post } from '../utils/repositories/types'
 
 export default defineEventHandler(async (event) => {
   const token = getCookie(event, 'auth')
@@ -45,40 +16,33 @@ export default defineEventHandler(async (event) => {
     title?: string
     description?: string
     category?: string
-    wishes?: string // Neues Feld
+    wishes?: string
   }>(event)
 
   const { title, description, category, wishes } = body
 
   if (!title || !description || !category) {
-    return {
-      error: 'Titel, Beschreibung und Kategorie sind erforderlich'
-    }
-  }
-
-  if (!['feature', 'bug', 'design', 'other'].includes(category)) {
-    return {
-      error: 'Ungültige Kategorie'
-    }
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'Titel, Beschreibung und Kategorie sind erforderlich'
+    })
   }
 
   try {
-    const posts = await readPosts()
     const now = Date.now()
 
     const newPost: Post = {
       id: randomUUID(),
       title,
       description,
-      category: category as any,
-      wishes: wishes || undefined, // Speichere Wünsche (falls vorhanden)
+      category,
+      wishes: wishes || undefined,
       author: authHeader ? 'User' : 'Admin',
       createdAt: now,
       updatedAt: now
     }
 
-    posts.push(newPost)
-    await writePosts(posts)
+    await postRepository.create(newPost)
 
     return {
       success: true,
@@ -86,8 +50,9 @@ export default defineEventHandler(async (event) => {
       message: 'Post erfolgreich erstellt!'
     }
   } catch (error: any) {
-    return {
-      error: 'Fehler beim Erstellen des Posts: ' + error.message
-    }
+    throw createError({
+      statusCode: 500,
+      statusMessage: 'Fehler beim Erstellen des Posts: ' + error.message
+    })
   }
 })

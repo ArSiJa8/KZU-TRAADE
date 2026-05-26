@@ -1,19 +1,5 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { createHash, randomUUID } from 'node:crypto'
-import path from 'node:path'
-
-type User = {
-    id: string
-    email: string
-    passwordHash: string
-    role: 'user'
-    verified: boolean
-    verificationToken?: string
-    verificationTokenExpiry?: number
-}
-
-const dataDir = path.join(process.cwd(), 'server', 'data')
-const usersFile = path.join(dataDir, 'users.json')
+import type { User } from '../utils/repositories/types'
 
 function hashPassword(password: string) {
     return createHash('sha256').update(password).digest('hex')
@@ -27,30 +13,12 @@ function isAllowedKzuEmail(email: string) {
     return /^[^\s@]+@([a-z0-9-]+\.)*kzu\.ch$/i.test(email)
 }
 
-async function readUsers(): Promise<User[]> {
-    try {
-        const content = await readFile(usersFile, 'utf-8')
-        return JSON.parse(content) as User[]
-    } catch {
-        return []
-    }
-}
-
-async function writeUsers(users: User[]) {
-    await mkdir(dataDir, { recursive: true })
-    await writeFile(usersFile, JSON.stringify(users, null, 2))
-}
-
-// Einfache E-Mail-Funktion (mit nodemailer oder service)
 async function sendVerificationEmail(email: string, token: string) {
-    // Beispiel mit einem E-Mail-Service
-    // In Production: nodemailer oder SendGrid verwenden
     const verificationUrl = `${process.env.PUBLIC_URL || 'http://localhost:3000'}/verify-email?token=${token}`
     
     console.log(`Verification email would be sent to ${email}`)
     console.log(`Verification URL: ${verificationUrl}`)
     
-    // Hier würde der echte E-Mail-Versand stattfinden
     return true
 }
 
@@ -64,33 +32,25 @@ export default defineEventHandler(async (event) => {
     const password = body.password
 
     if (!email || !password) {
-        return {
-            error: 'E-Mail und Passwort angeben'
-        }
+        throw createError({ statusCode: 400, statusMessage: 'E-Mail und Passwort angeben' })
     }
 
     if (!isAllowedKzuEmail(email)) {
-        return {
-            error: 'Nur E-Mail-Adressen mit kzu.ch sind erlaubt'
-        }
+        throw createError({ statusCode: 400, statusMessage: 'Nur E-Mail-Adressen mit kzu.ch sind erlaubt' })
     }
 
     if (password.length < 4) {
-        return {
-            error: 'Passwort muss mindestens 4 Zeichen haben'
-        }
+        throw createError({ statusCode: 400, statusMessage: 'Passwort muss mindestens 4 Zeichen haben' })
     }
 
-    const users = await readUsers()
+    const existingUser = await userRepository.getByEmail(email)
 
-    if (users.some((user) => user.email === email)) {
-        return {
-            error: 'Diese E-Mail ist bereits registriert'
-        }
+    if (existingUser) {
+        throw createError({ statusCode: 400, statusMessage: 'Diese E-Mail ist bereits registriert' })
     }
 
     const verificationToken = generateVerificationToken()
-    const verificationTokenExpiry = Date.now() + (24 * 60 * 60 * 1000) // 24 Stunden
+    const verificationTokenExpiry = Date.now() + (24 * 60 * 60 * 1000)
 
     const newUser: User = {
         id: randomUUID(),
@@ -102,10 +62,7 @@ export default defineEventHandler(async (event) => {
         verificationTokenExpiry
     }
 
-    users.push(newUser)
-    await writeUsers(users)
-
-    // Sende Bestätigungs-E-Mail
+    await userRepository.create(newUser)
     await sendVerificationEmail(email, verificationToken)
 
     return {

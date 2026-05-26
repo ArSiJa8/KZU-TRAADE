@@ -110,8 +110,15 @@ export default defineNuxtConfig({
   vite: {
     server: {
       allowedHosts: [
-        'creational-zena-simulatively.ngrok-free.dev'
-      ]
+        'creational-zena-simulatively.ngrok-free.dev',
+        'localhost'
+      ],
+      watch: {
+        ignored: ['**/server/data/**']
+      },
+      fs: {
+        allow: ['..']
+      }
     }
   },
 
@@ -119,6 +126,9 @@ export default defineNuxtConfig({
     compressPublicAssets: true,
     experimental: {
       openAPI: true
+    },
+    watchOptions: {
+      ignored: ['**/server/data/**']
     }
   },
 
