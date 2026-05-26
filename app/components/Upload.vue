@@ -183,7 +183,7 @@
               <strong>{{ post.title }}</strong>
             </button>
 
-            <p class="category">
+            <p class="category-badge">
               {{ post.category }}
             </p>
 
@@ -642,7 +642,6 @@ async function loadPosts() {
   display: inline-block;
 }
 
-
 .custom-file-upload:hover {
   background-color: var(--btn-secondary-hover);
   border-color: var(--accent);
@@ -761,7 +760,7 @@ button:disabled {
   justify-content: space-between;
   align-items: center;
   gap: 12px;
-  margin-bottom: 12px;
+  margin-bottom: 24px;
   flex-wrap: wrap;
 }
 
@@ -781,43 +780,46 @@ button:disabled {
   min-width: 170px;
 }
 
-/* NEW: Vertical list layout instead of grid */
+/* Gallery: Responsive grid layout */
 .gallery {
   margin-top: 40px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
 }
 
 .empty-gallery {
   color: var(--text-muted);
   font-style: italic;
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 40px 20px;
 }
 
-/* NEW: Horizontal card layout */
+/* Item card: Vertical layout with image on top */
 .item {
   display: flex;
-  gap: 16px;
+  flex-direction: column;
   border-radius: 12px;
   overflow: hidden;
   background-color: var(--bg-surface);
   border: 1px solid var(--border);
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 }
 
 .item:hover {
   border-color: var(--accent);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
 }
 
-/* NEW: Image section on the left */
+/* Image on top */
 .item-image-wrapper {
-  flex-shrink: 0;
-  width: 160px;
-  height: 160px;
+  width: 100%;
+  height: 200px;
   overflow: hidden;
-  border-radius: 10px;
+  border-radius: 0;
 }
 
 .post-preview {
@@ -829,6 +831,9 @@ button:disabled {
   color: var(--text);
   cursor: pointer;
   text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .post-preview img {
@@ -836,15 +841,19 @@ button:disabled {
   height: 100%;
   object-fit: cover;
   display: block;
+  transition: transform 0.3s ease;
 }
 
-/* NEW: Content section on the right */
+.post-preview:hover img {
+  transform: scale(1.05);
+}
+
+/* Content section below image */
 .item-content {
-  flex: 1;
-  padding: 16px 20px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  gap: 12px;
 }
 
 .post-title-btn {
@@ -858,9 +867,9 @@ button:disabled {
 
 .post-title-btn strong {
   display: block;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
-  margin-bottom: 6px;
+  line-height: 1.4;
   transition: color 0.2s;
 }
 
@@ -868,23 +877,33 @@ button:disabled {
   color: var(--accent);
 }
 
-.category {
-  margin: 0 0 12px;
+/* Category badge */
+.category-badge {
+  margin: 0;
+  padding: 6px 10px;
+  background-color: var(--bg);
   color: var(--text-muted);
-  font-size: 13px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 6px;
+  display: inline-block;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 1px solid var(--border);
 }
 
+/* Delete button */
 .delete-btn {
   align-self: flex-start;
   background: var(--danger);
   color: var(--danger-text);
   border: none;
-  padding: 6px 12px;
+  padding: 8px 14px;
   border-radius: 6px;
   cursor: pointer;
   font-size: 12px;
   font-weight: 600;
-  transition: background 0.2s, transform 0.2s;
+  transition: all 0.2s;
 }
 
 .delete-btn:hover {
@@ -892,6 +911,7 @@ button:disabled {
   transform: scale(1.05);
 }
 
+/* Modal styles */
 .new-post-backdrop,
 .modal-backdrop {
   position: fixed;
@@ -991,19 +1011,48 @@ button:disabled {
   margin-top: -70px;
 }
 
-/* Responsive design for mobile */
-@media (max-width: 640px) {
-  .item {
-    flex-direction: column;
+/* Responsive design */
+@media (max-width: 768px) {
+  .gallery {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
   }
 
   .item-image-wrapper {
-    width: 100%;
-    height: 200px;
+    height: 180px;
   }
 
   .item-content {
-    padding: 12px 16px;
+    padding: 14px;
+    gap: 10px;
+  }
+
+  .post-title-btn strong {
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .gallery {
+    grid-template-columns: 1fr;
+  }
+
+  .item-image-wrapper {
+    height: 200px;
+  }
+
+  .gallery-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .category-filter {
+    width: 100%;
+  }
+
+  .category-filter select {
+    flex: 1;
+    min-width: unset;
   }
 }
 </style>
