@@ -173,13 +173,13 @@
       <div class="gallery">
         <article v-for="post in filteredPosts" :key="post.id" class="item">
           <div class="item-image-wrapper">
-            <button class="post-preview" type="button" @click="selectedPost = post">
+            <button class="post-preview" type="button" @click="selectedPost = post; loadMessages(post.id)">
               <img :src="`/uploads/${post.mainImage}`" alt="Tauschangebot">
             </button>
           </div>
 
           <div class="item-content">
-            <button class="post-title-btn" type="button" @click="selectedPost = post">
+            <button class="post-title-btn" type="button" @click="selectedPost = post; loadMessages(post.id)">
               <strong>{{ post.title }}</strong>
             </button>
 
@@ -212,52 +212,95 @@
         @click.self="selectedPost = null"
         @keydown.esc="selectedPost = null"
     >
-      <section class="modal">
+      <section class="modal modal-with-chat">
         <button class="close-btn" type="button" @click="selectedPost = null">
           ×
         </button>
 
-        <img :src="`/uploads/${selectedPost.mainImage}`" class="modal-main-image" alt="Hauptbild">
+        <div class="modal-content-wrapper">
+          <div class="modal-left">
+            <img :src="`/uploads/${selectedPost.mainImage}`" class="modal-main-image" alt="Hauptbild">
 
-        <h2>{{ selectedPost.title }}</h2>
+            <h2>{{ selectedPost.title }}</h2>
 
-        <p class="modal-category">
-          {{ selectedPost.category }}
-        </p>
+            <p class="modal-category">
+              {{ selectedPost.category }}
+            </p>
 
-        <p class="modal-description">
-          {{ selectedPost.description }}
-        </p>
+            <p class="modal-description">
+              {{ selectedPost.description }}
+            </p>
 
-        <div v-if="selectedPost.images.length > 1" class="modal-images">
-          <img
-              v-for="image in selectedPost.images"
-              :key="image"
-              :src="`/uploads/${image}`"
-              alt="Weiteres Bild"
-          >
+            <div v-if="selectedPost.images.length > 1" class="modal-images">
+              <img
+                  v-for="image in selectedPost.images"
+                  :key="image"
+                  :src="`/uploads/${image}`"
+                  alt="Weiteres Bild"
+              >
+            </div>
+
+            <div class="owner-info">
+              <p><strong>Name:</strong> {{ selectedPost.ownerName }}</p>
+              <p><strong>E-Mail:</strong> {{ selectedPost.ownerEmail }}</p>
+            </div>
+
+            <button
+                v-if="canDelete(selectedPost)"
+                class="modal-delete-btn"
+                type="button"
+                @click="remove(selectedPost.id)"
+            >
+              Diesen Post löschen
+            </button>
+          </div>
+
+          <!-- Chat Section -->
+          <div class="modal-right">
+            <div class="chat-header">
+              <h3>💬 Verhandlungen</h3>
+              <p class="chat-info">{{ messages.length }} Nachrichten</p>
+            </div>
+
+            <div class="chat-messages" ref="messagesContainer">
+              <div v-if="messages.length === 0" class="no-messages">
+                <p>Noch keine Nachrichten. Sei der Erste!</p>
+              </div>
+
+              <div v-for="msg in messages" :key="msg.id" class="message" :class="{ own: msg.authorEmail === login }">
+                <div class="message-author">
+                  <strong>{{ msg.author }}</strong>
+                  <span class="message-time">{{ formatTime(msg.createdAt) }}</span>
+                </div>
+                <div class="message-content">{{ msg.content }}</div>
+              </div>
+            </div>
+
+            <div v-if="!token" class="login-required">
+              <p>Bitte <strong>einloggen</strong>, um zu verhandeln</p>
+            </div>
+
+            <form v-else class="chat-form" @submit.prevent="sendMessage">
+              <input
+                  v-model="newMessage"
+                  type="text"
+                  placeholder="Deine Nachricht..."
+                  maxlength="2000"
+                  :disabled="isSending"
+              >
+              <button type="submit" :disabled="isSending || !newMessage.trim()">
+                {{ isSending ? 'Wird gesendet...' : 'Senden' }}
+              </button>
+            </form>
+          </div>
         </div>
-
-        <div class="owner-info">
-          <p><strong>Name:</strong> {{ selectedPost.ownerName }}</p>
-          <p><strong>E-Mail:</strong> {{ selectedPost.ownerEmail }}</p>
-        </div>
-
-        <button
-            v-if="canDelete(selectedPost)"
-            class="modal-delete-btn"
-            type="button"
-            @click="remove(selectedPost.id)"
-        >
-          Diesen Post löschen
-        </button>
       </section>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 type ApiResult = {
   success?: boolean
@@ -279,12 +322,26 @@ type TradePost = {
   createdAt: string
 }
 
+type Message = {
+  id: string
+  postId: string
+  author: string
+  authorEmail: string
+  content: string
+  createdAt: string
+}
+
 type UploadResult = ApiResult & {
   post?: TradePost
 }
 
 type PostsResult = ApiResult & {
   posts?: TradePost[]
+}
+
+type MessagesResult = ApiResult & {
+  messages?: Message[]
+  message?: Message
 }
 
 const newPostOpen = useState('newPostOpen', () => false)
@@ -302,6 +359,12 @@ const mainImageIndex = ref(0)
 const posts = ref<TradePost[]>([])
 const selectedPost = ref<TradePost | null>(null)
 
+// Chat related
+const messages = ref<Message[]>([])
+const newMessage = ref('')
+const isSending = ref(false)
+const messagesContainer = ref<HTMLElement | null>(null)
+
 const filteredPosts = computed(() => {
   if (selectedCategory.value === 'Alle') {
     return posts.value
@@ -318,6 +381,7 @@ const uploadCooldown = ref(0)
 const isUploading = ref(false)
 
 let uploadCooldownInterval: ReturnType<typeof setInterval> | null = null
+let messagesPollingInterval: ReturnType<typeof setInterval> | null = null
 
 const uploadButtonText = computed(() => {
   if (isUploading.value) {
@@ -343,8 +407,39 @@ onBeforeUnmount(() => {
     clearInterval(uploadCooldownInterval)
   }
 
+  if (messagesPollingInterval) {
+    clearInterval(messagesPollingInterval)
+  }
+
   clearPreviews()
 })
+
+// Scroll to bottom when messages update
+watch(messages, () => {
+  setTimeout(() => {
+    if (messagesContainer.value) {
+      messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
+    }
+  }, 0)
+})
+
+function formatTime(timestamp: string): string {
+  const date = new Date(timestamp)
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  const diffMins = Math.floor(diffMs / 60000)
+
+  if (diffMins < 1) return 'gerade eben'
+  if (diffMins < 60) return `vor ${diffMins}m`
+
+  const diffHours = Math.floor(diffMins / 60)
+  if (diffHours < 24) return `vor ${diffHours}h`
+
+  const diffDays = Math.floor(diffHours / 24)
+  if (diffDays < 7) return `vor ${diffDays}d`
+
+  return date.toLocaleDateString('de-DE')
+}
 
 function closeNewPost() {
   newPostOpen.value = false
@@ -561,6 +656,73 @@ async function loadPosts() {
   }
 
   posts.value = res.posts ?? []
+}
+
+// Chat functions
+async function loadMessages(postId: string) {
+  try {
+    const res = await $fetch<MessagesResult>('/api/messages', {
+      query: { postId }
+    })
+
+    if (res.messages) {
+      messages.value = res.messages
+    }
+
+    // Start polling for new messages
+    if (messagesPollingInterval) {
+      clearInterval(messagesPollingInterval)
+    }
+
+    messagesPollingInterval = setInterval(async () => {
+      try {
+        const updated = await $fetch<MessagesResult>('/api/messages', {
+          query: { postId }
+        })
+        if (updated.messages) {
+          messages.value = updated.messages
+        }
+      } catch (err) {
+        console.error('Error polling messages:', err)
+      }
+    }, 1000) // Poll every second for new messages
+  } catch (err: any) {
+    console.error('Error loading messages:', err)
+  }
+}
+
+async function sendMessage() {
+  if (!token.value || !selectedPost.value || !newMessage.value.trim()) {
+    return
+  }
+
+  isSending.value = true
+
+  try {
+    const res = await $fetch<MessagesResult>('/api/messages', {
+      method: 'POST',
+      body: {
+        postId: selectedPost.value.id,
+        content: newMessage.value.trim()
+      },
+      headers: {
+        Authorization: `Bearer ${token.value}`
+      }
+    })
+
+    if (res.error) {
+      alert(res.error)
+      return
+    }
+
+    newMessage.value = ''
+    await loadMessages(selectedPost.value.id)
+  } catch (err: any) {
+    const message = err.data?.statusMessage || err.statusMessage || err.message || 'Fehler beim Senden'
+    alert(`Nachricht konnte nicht gesendet werden: ${message}`)
+  } finally {
+    isSending.value = false
+  }
 }
 </script>
 
@@ -780,7 +942,6 @@ button:disabled {
   min-width: 170px;
 }
 
-/* Gallery: Responsive grid layout */
 .gallery {
   margin-top: 40px;
   display: grid;
@@ -796,7 +957,6 @@ button:disabled {
   padding: 40px 20px;
 }
 
-/* Item card: Vertical layout with image on top */
 .item {
   display: flex;
   flex-direction: column;
@@ -814,7 +974,6 @@ button:disabled {
   transform: translateY(-2px);
 }
 
-/* Image on top */
 .item-image-wrapper {
   width: 100%;
   height: 200px;
@@ -848,7 +1007,6 @@ button:disabled {
   transform: scale(1.05);
 }
 
-/* Content section below image */
 .item-content {
   padding: 16px;
   display: flex;
@@ -877,7 +1035,6 @@ button:disabled {
   color: var(--accent);
 }
 
-/* Category badge */
 .category-badge {
   margin: 0;
   padding: 6px 10px;
@@ -892,7 +1049,6 @@ button:disabled {
   border: 1px solid var(--border);
 }
 
-/* Delete button */
 .delete-btn {
   align-self: flex-start;
   background: var(--danger);
@@ -911,7 +1067,6 @@ button:disabled {
   transform: scale(1.05);
 }
 
-/* Modal styles */
 .new-post-backdrop,
 .modal-backdrop {
   position: fixed;
@@ -923,8 +1078,49 @@ button:disabled {
   background: rgba(0, 0, 0, 0.6);
 }
 
-.new-post-modal,
 .modal {
+  position: relative;
+  width: min(720px, 100%);
+  max-height: 90vh;
+  overflow: auto;
+  background: var(--bg-surface);
+  color: var(--text);
+  border-radius: 18px;
+  padding: 24px;
+  text-align: left;
+}
+
+.modal-with-chat {
+  width: min(1200px, 100%);
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+}
+
+.modal-content-wrapper {
+  display: flex;
+  gap: 0;
+  width: 100%;
+  height: 100%;
+  max-height: 90vh;
+}
+
+.modal-left {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  border-right: 1px solid var(--border);
+}
+
+.modal-right {
+  width: 350px;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg);
+  overflow: hidden;
+}
+
+.new-post-modal {
   position: relative;
   width: min(720px, 100%);
   max-height: 90vh;
@@ -954,6 +1150,7 @@ button:disabled {
   font-size: 24px;
   font-weight: 700;
   line-height: 1;
+  z-index: 10;
 }
 
 .modal-main-image {
@@ -1006,12 +1203,151 @@ button:disabled {
   margin-top: 10px;
 }
 
+/* Chat styles */
+.chat-header {
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+  background-color: var(--bg-surface);
+}
+
+.chat-header h3 {
+  margin: 0 0 4px;
+  font-size: 16px;
+}
+
+.chat-info {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.no-messages {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.message {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  border-radius: 8px;
+  background-color: var(--bg);
+  border: 1px solid var(--border);
+}
+
+.message.own {
+  background-color: var(--accent);
+  color: white;
+  border-color: var(--accent);
+  align-self: flex-end;
+  max-width: 85%;
+}
+
+.message-author {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.message-author strong {
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.message-time {
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.message-content {
+  word-wrap: break-word;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.login-required {
+  padding: 16px;
+  text-align: center;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border);
+}
+
+.chat-form {
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+  border-top: 1px solid var(--border);
+  background-color: var(--bg-surface);
+}
+
+.chat-form input {
+  flex: 1;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: var(--background);
+  color: var(--text-main);
+  font: inherit;
+  font-size: 13px;
+}
+
+.chat-form input:disabled {
+  opacity: 0.6;
+}
+
+.chat-form button {
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.chat-form button:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
 .up-top {
   z-index: 3;
   margin-top: -70px;
 }
 
 /* Responsive design */
+@media (max-width: 900px) {
+  .modal-with-chat {
+    flex-direction: column;
+  }
+
+  .modal-left {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    max-height: 50%;
+  }
+
+  .modal-right {
+    width: 100%;
+  }
+}
+
 @media (max-width: 768px) {
   .gallery {
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -1029,6 +1365,14 @@ button:disabled {
 
   .post-title-btn strong {
     font-size: 15px;
+  }
+
+  .modal-left {
+    padding: 16px;
+  }
+
+  .chat-form input {
+    font-size: 12px;
   }
 }
 
@@ -1053,6 +1397,29 @@ button:disabled {
   .category-filter select {
     flex: 1;
     min-width: unset;
+  }
+
+  .modal {
+    width: 100% !important;
+    max-height: 100vh;
+    border-radius: 0;
+    padding: 0;
+  }
+
+  .modal-content-wrapper {
+    flex-direction: column;
+  }
+
+  .modal-left {
+    max-height: none;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    overflow-y: auto;
+    max-height: 50%;
+  }
+
+  .modal-right {
+    width: 100%;
   }
 }
 </style>
