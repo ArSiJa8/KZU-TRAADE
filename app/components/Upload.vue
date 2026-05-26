@@ -172,23 +172,30 @@
 
       <div class="gallery">
         <article v-for="post in filteredPosts" :key="post.id" class="item">
-          <button class="post-preview" type="button" @click="selectedPost = post">
-            <img :src="`/uploads/${post.mainImage}`" alt="Tauschangebot">
-            <strong>{{ post.title }}</strong>
-          </button>
+          <div class="item-image-wrapper">
+            <button class="post-preview" type="button" @click="selectedPost = post">
+              <img :src="`/uploads/${post.mainImage}`" alt="Tauschangebot">
+            </button>
+          </div>
 
-          <p class="category">
-            {{ post.category }}
-          </p>
+          <div class="item-content">
+            <button class="post-title-btn" type="button" @click="selectedPost = post">
+              <strong>{{ post.title }}</strong>
+            </button>
 
-          <button
-              v-if="canDelete(post)"
-              class="delete-btn"
-              type="button"
-              @click="remove(post.id)"
-          >
-            Löschen
-          </button>
+            <p class="category">
+              {{ post.category }}
+            </p>
+
+            <button
+                v-if="canDelete(post)"
+                class="delete-btn"
+                type="button"
+                @click="remove(post.id)"
+            >
+              Löschen
+            </button>
+          </div>
         </article>
       </div>
 
@@ -774,11 +781,12 @@ button:disabled {
   min-width: 170px;
 }
 
+/* NEW: Vertical list layout instead of grid */
 .gallery {
   margin-top: 40px;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-  gap: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .empty-gallery {
@@ -786,16 +794,35 @@ button:disabled {
   font-style: italic;
 }
 
+/* NEW: Horizontal card layout */
 .item {
-  position: relative;
+  display: flex;
+  gap: 16px;
   border-radius: 12px;
   overflow: hidden;
   background-color: var(--bg-surface);
   border: 1px solid var(--border);
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.item:hover {
+  border-color: var(--accent);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+}
+
+/* NEW: Image section on the left */
+.item-image-wrapper {
+  flex-shrink: 0;
+  width: 160px;
+  height: 160px;
+  overflow: hidden;
+  border-radius: 10px;
 }
 
 .post-preview {
   width: 100%;
+  height: 100%;
   border: 0;
   padding: 0;
   background: transparent;
@@ -806,35 +833,57 @@ button:disabled {
 
 .post-preview img {
   width: 100%;
-  height: 180px;
+  height: 100%;
   object-fit: cover;
   display: block;
 }
 
-.post-preview strong {
+/* NEW: Content section on the right */
+.item-content {
+  flex: 1;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.post-title-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  color: var(--text);
+}
+
+.post-title-btn strong {
   display: block;
-  padding: 12px 12px 4px;
-  font-size: 16px;
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  transition: color 0.2s;
+}
+
+.post-title-btn:hover strong {
+  color: var(--accent);
 }
 
 .category {
-  margin: 0;
-  padding: 0 12px 14px;
+  margin: 0 0 12px;
   color: var(--text-muted);
   font-size: 13px;
 }
 
 .delete-btn {
-  position: absolute;
-  top: 8px;
-  right: 8px;
+  align-self: flex-start;
   background: var(--danger);
   color: var(--danger-text);
   border: none;
-  padding: 4px 10px;
+  padding: 6px 12px;
   border-radius: 6px;
   cursor: pointer;
-  font-size: 11px;
+  font-size: 12px;
+  font-weight: 600;
   transition: background 0.2s, transform 0.2s;
 }
 
@@ -940,5 +989,21 @@ button:disabled {
 .up-top {
   z-index: 3;
   margin-top: -70px;
+}
+
+/* Responsive design for mobile */
+@media (max-width: 640px) {
+  .item {
+    flex-direction: column;
+  }
+
+  .item-image-wrapper {
+    width: 100%;
+    height: 200px;
+  }
+
+  .item-content {
+    padding: 12px 16px;
+  }
 }
 </style>
