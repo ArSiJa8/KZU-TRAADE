@@ -44,6 +44,6 @@ export default defineEventHandler(async (event) => {
     return {
         token,
         role: user.role,
-        email: user.email
+        login: user.email
     }
 })
