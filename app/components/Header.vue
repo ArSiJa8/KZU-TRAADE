@@ -230,7 +230,7 @@ function logout() {
               <input
                   v-model="loginValue"
                   type="text"
-                  placeholder="admin oder E-Mail@kzu.ch"
+                  placeholder="KZU Email"
                   @input="clearAuthError"
                   @keyup.enter="login"
               >
