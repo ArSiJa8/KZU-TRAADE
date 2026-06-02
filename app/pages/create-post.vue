@@ -1,6 +1,6 @@
 <template>
   <div class="create-post-container">
-    <div class="create-post-card">
+    <div class="create-post-card glass-panel">
       <h1>📝 Neuen Post erstellen</h1>
 
       <!-- Fehler anzeigen -->
@@ -10,7 +10,7 @@
 
       <!-- Erfolgs-Nachricht -->
       <div v-if="success" class="success-message">
-        ✅ Post erfolgreich erstellt!
+        Post erfolgreich erstellt!
       </div>
 
       <form @submit.prevent="submitPost" class="form">
@@ -96,7 +96,7 @@ async function submitPost() {
   loading.value = true
 
   try {
-    const response = await $fetch('/api/create-post', {
+    const response = await $fetch<any>('/api/create-post', {
       method: 'POST',
       body: {
         title: form.value.title,
@@ -133,27 +133,25 @@ async function submitPost() {
 <style scoped>
 .create-post-container {
   min-height: 100vh;
-  padding: 40px 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 80px 20px;
+  background-color: var(--background);
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
 .create-post-card {
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
   padding: 40px;
   max-width: 600px;
   width: 100%;
 }
 
 h1 {
-  margin: 0 0 30px;
-  color: #333;
+  margin: 0 0 32px;
+  color: var(--neutral-100);
   font-size: 28px;
   text-align: center;
+  letter-spacing: -0.02em;
 }
 
 .form {
@@ -169,88 +167,42 @@ h1 {
 }
 
 .form-group label {
-  font-weight: 600;
-  color: #333;
+  font-weight: 700;
+  color: var(--neutral-200);
   font-size: 14px;
+  margin-left: 4px;
 }
 
 .form-group input,
 .form-group textarea,
 .form-group select {
-  padding: 12px;
-  border: 2px solid #e0e0e0;
-  border-radius: 8px;
-  font-size: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font-size: 15px;
   font-family: inherit;
-  transition: border-color 0.3s;
+  background-color: color-mix(in srgb, var(--neutral-900) 30%, transparent);
+  color: var(--neutral-100);
+  transition: all 0.3s ease;
 }
 
 .form-group input:focus,
 .form-group textarea:focus,
 .form-group select:focus {
   outline: none;
-  border-color: #667eea;
-  background-color: #f9f9ff;
+  border-color: var(--accent);
+  background-color: color-mix(in srgb, var(--neutral-900) 50%, transparent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 15%, transparent);
 }
 
 .form-group textarea {
   resize: vertical;
-  min-height: 100px;
+  min-height: 120px;
 }
 
 .submit-btn {
-  padding: 14px 24px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
-  margin-top: 10px;
-}
-
-.submit-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
-}
-
-.submit-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.error-message {
-  background-color: #fee;
-  border: 2px solid #f66;
-  color: #c33;
-  padding: 12px;
-  border-radius: 8px;
-  font-weight: 600;
-  margin-bottom: 20px;
-}
-
-.success-message {
-  background-color: #efe;
-  border: 2px solid #6f6;
-  color: #3c3;
-  padding: 12px;
-  border-radius: 8px;
-  font-weight: 600;
-  margin-bottom: 20px;
-  animation: slideIn 0.3s ease;
-}
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  margin-top: 12px;
+  width: 100%;
 }
 
 @media (max-width: 600px) {

@@ -33,7 +33,7 @@ onMounted(async () => {
   }
 
   try {
-    const response = await $fetch('/api/verify-email', {
+    const response = await $fetch<any>('/api/verify-email', {
       method: 'POST',
       body: { token }
     })

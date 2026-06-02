@@ -30,3 +30,9 @@ export interface User {
 export interface Stats {
     totalViews: number;
 }
+
+export interface ApiResponse<T = any> {
+    success: boolean;
+    data?: T;
+    error?: string;
+}

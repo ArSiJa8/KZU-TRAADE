@@ -26,7 +26,10 @@ export class PostRepository extends BaseRepository<Post> {
         const index = posts.findIndex(p => p.id === id);
         if (index === -1) return false;
         
-        posts[index] = { ...posts[index], ...updatedPost };
+        const existingPost = posts[index];
+        if (!existingPost) return false;
+
+        posts[index] = { ...existingPost, ...updatedPost, id: existingPost.id } as Post;
         await this.write(posts);
         return true;
     }

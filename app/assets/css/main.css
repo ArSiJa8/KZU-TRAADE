@@ -108,22 +108,85 @@ button {
     background-color: var(--accent);
     color: var(--btn-primary-text);
     border: none;
-    padding: 10px 20px;
-    border-radius: 8px;
-    font-weight: 600;
+    padding: 10px 24px;
+    border-radius: 12px;
+    font-weight: 700;
     cursor: pointer;
-    transition: background-color 0.2s ease, transform 0.1s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 25%, transparent);
 }
 
 button:hover {
     background-color: var(--accent-hover);
-    transform: translateY(-1px);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px color-mix(in srgb, var(--accent) 35%, transparent);
 }
 
 button:active {
     transform: translateY(0);
 }
 
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Message Styling */
+.error-message,
+.success-message {
+    padding: 16px 20px;
+    border-radius: 14px;
+    font-weight: 600;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    backdrop-filter: blur(10px);
+    animation: message-slide-in 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    border: 1px solid transparent;
+}
+
+.error-message {
+    background: color-mix(in srgb, var(--red-900) 40%, transparent);
+    color: var(--red-200);
+    border-color: color-mix(in srgb, var(--red-500) 30%, transparent);
+}
+
+.error-message::before {
+    content: '⚠️';
+    font-size: 1.2rem;
+}
+
+.success-message {
+    background: color-mix(in srgb, var(--green-900) 40%, transparent);
+    color: var(--green-200);
+    border-color: color-mix(in srgb, var(--green-500) 30%, transparent);
+}
+
+.success-message::before {
+    content: '✅';
+    font-size: 1.2rem;
+}
+
+@keyframes message-slide-in {
+    from {
+        opacity: 0;
+        transform: translateY(-12px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
 /*---------------------------------------------------------------------------
-5.
- */
+5. Layout Helpers
+---------------------------------------------------------------------------*/
+.glass-panel {
+    background: color-mix(in srgb, var(--bg-surface) 60%, transparent);
+    backdrop-filter: blur(20px) saturate(160%);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+}
