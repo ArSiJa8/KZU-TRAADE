@@ -51,4 +51,4 @@ Bitte behebe folgende Typ-Fehler in den genannten Dateien:
 
 ---
 
-**Frage an beide:** Habt ihr die Fehler im Griff? Agent C, kannst du die Repository-Logik und die API-Typisierung übernehmen, während Agent B am Design arbeitet?
+**Frage an beide:** Habt ihr die Fehler im Griff? Agent C, kannst du die Repository-Logik und die API-Typisierung übernehmen, während Agent B am Design arbeitet

@@ -5,21 +5,8 @@ function hashPassword(password: string) {
     return createHash('sha256').update(password).digest('hex')
 }
 
-function generateVerificationToken() {
-    return randomUUID()
-}
-
 function isAllowedKzuEmail(email: string) {
     return /^[^\s@]+@([a-z0-9-]+\.)*kzu\.ch$/i.test(email)
-}
-
-async function sendVerificationEmail(email: string, token: string) {
-    const verificationUrl = `${process.env.PUBLIC_URL || 'http://localhost:3000'}/verify-email?token=${token}`
-    
-    console.log(`Verification email would be sent to ${email}`)
-    console.log(`Verification URL: ${verificationUrl}`)
-    
-    return true
 }
 
 export default defineEventHandler(async (event) => {
@@ -49,24 +36,17 @@ export default defineEventHandler(async (event) => {
         throw createError({ statusCode: 400, statusMessage: 'Diese E-Mail ist bereits registriert' })
     }
 
-    const verificationToken = generateVerificationToken()
-    const verificationTokenExpiry = Date.now() + (24 * 60 * 60 * 1000)
-
     const newUser: User = {
         id: randomUUID(),
         email,
         passwordHash: hashPassword(password),
-        role: 'user',
-        verified: false,
-        verificationToken,
-        verificationTokenExpiry
+        role: 'user'
     }
 
     await userRepository.create(newUser)
-    await sendVerificationEmail(email, verificationToken)
 
     return {
         success: true,
-        message: 'Registrierung erfolgreich. Bitte bestätige deine E-Mail-Adresse.'
+        message: 'Registrierung erfolgreich. Du kannst dich jetzt einloggen.'
     }
 })

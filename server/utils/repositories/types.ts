@@ -22,9 +22,6 @@ export interface User {
     email: string;
     passwordHash: string;
     role: UserRole;
-    verified?: boolean;
-    verificationToken?: string;
-    verificationTokenExpiry?: number;
 }
 
 export interface Stats {
