@@ -67,13 +67,13 @@
           </div>
 
           <div class="form-group">
-            <label for="wishes">💡 Deine Wünsche (Optional)</label>
+            <label for="wishes">Deine Wünsche (Optional)</label>
             <textarea
                 id="wishes"
                 v-model="wishes"
                 maxlength="500"
                 rows="3"
-                placeholder="Was wünschst du dir? z.B. Filzstift, Radiergummi, Notizbuch..."
+                placeholder="Was wünschst du dir dafür? z.B. Filzstift, Radiergummi, Notizbuch..."
             />
           </div>
 
