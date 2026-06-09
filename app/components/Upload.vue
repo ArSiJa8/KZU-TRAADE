@@ -13,7 +13,7 @@
           ×
         </button>
 
-        <h2>Tauschangegebote erstellen</h2>
+        <h2>Tauschangebot erstellen</h2>
 
         <p v-if="token" class="login-success">
           Eingeloggt als {{ role === 'admin' ? 'Admin' : 'User' }}
@@ -67,7 +67,7 @@
           </div>
 
           <div class="form-group">
-            <label for="wishes">Deine Wünsche (Optional)</label>
+            <label for="wishes"> Was wünscht du dir dafür? (Optional)</label>
             <textarea
                 id="wishes"
                 v-model="wishes"
@@ -114,7 +114,7 @@
               >
                 <img :src="item.url" alt="Vorschau">
                 <span>
-                  {{ mainImageIndex === index ? 'Main Image' : 'Als Main Image wählen' }}
+                  {{ mainImageIndex === index ? 'Hauptbild' : 'Als Hauptbild' }}
                 </span>
               </button>
 
@@ -231,12 +231,15 @@
 
         <div class="modal-content-wrapper">
           <div class="modal-left">
-            <img 
-              :src="`/uploads/${selectedPost.mainImage}`" 
-              class="modal-main-image zoomable" 
-              alt="Hauptbild"
-              @click="openZoom(`/uploads/${selectedPost.mainImage}`)"
-            >
+            <div class="image-container">
+              <img 
+                :src="`/uploads/${selectedPost.mainImage}`" 
+                class="modal-main-image zoomable" 
+                alt="Hauptbild"
+                @click="openZoom(`/uploads/${selectedPost.mainImage}`)"
+              >
+              <div class="zoom-hint"> zum Vergrößern klicken</div>
+            </div>
 
             <h2>{{ selectedPost.title }}</h2>
 
@@ -249,7 +252,7 @@
             </p>
 
             <div v-if="selectedPost.wishes" class="modal-wishes">
-              <strong>💡 Wünsche:</strong>
+              <strong> Wünsche:</strong>
               <p>{{ selectedPost.wishes }}</p>
             </div>
 
@@ -261,6 +264,7 @@
                   alt="Weiteres Bild"
                   class="zoomable"
                   @click="openZoom(`/uploads/${image}`)"
+                  :title="`Klick zum Vergrößern`"
               >
             </div>
 
@@ -281,13 +285,13 @@
 
           <div class="modal-right">
             <div class="chat-header">
-              <h3>💬 Verhandlungen</h3>
-              <p class="chat-info">{{ messages.length }} Nachrichten</p>
+              <h3> Verhandlungen</h3>
+              <p class="chat-info">{{ messages.length }} {{ messages.length === 1 ? 'Nachricht' : 'Nachrichten' }}</p>
             </div>
 
             <div class="chat-messages" ref="messagesContainer">
               <div v-if="messages.length === 0" class="no-messages">
-                <p>Noch keine Nachrichten. Sei der Erste!</p>
+                <p>Noch keine Nachrichten.<br>Sei der Erste!</p>
               </div>
 
               <div v-for="msg in messages" :key="msg.id" class="message" :class="{ own: msg.authorEmail === login }">
@@ -312,7 +316,7 @@
                   :disabled="isSending"
               >
               <button type="submit" :disabled="isSending || !newMessage.trim()">
-                {{ isSending ? 'Wird gesendet...' : 'Senden' }}
+                {{ isSending ? '...' : '✓' }}
               </button>
             </form>
           </div>
@@ -397,7 +401,7 @@ const mainImageIndex = ref(0)
 const posts = ref<TradePost[]>([])
 const selectedPost = ref<TradePost | null>(null)
 
-// NEU: Zustand für die Zoom-Funktionalität
+// Zoom-Funktionalität
 const zoomedImageUrl = ref<string | null>(null)
 
 // Chat related
@@ -447,7 +451,6 @@ onMounted(() => {
   login.value = localStorage.getItem('login')
   loadPosts()
   
-  // ESC-Key Eventlistener für das Schließen des Zoom-Modals hinzufügen
   window.addEventListener('keydown', handleGlobalKeyDown)
 })
 
@@ -464,7 +467,6 @@ onBeforeUnmount(() => {
   window.removeEventListener('keydown', handleGlobalKeyDown)
 })
 
-// Scroll to bottom when messages update
 watch(messages, () => {
   setTimeout(() => {
     if (messagesContainer.value) {
@@ -473,7 +475,6 @@ watch(messages, () => {
   }, 0)
 })
 
-// NEU: Zoom-Funktionen
 function openZoom(url: string) {
   zoomedImageUrl.value = url
 }
@@ -494,7 +495,7 @@ function formatTime(timestamp: string): string {
   const diffMs = now.getTime() - date.getTime()
   const diffMins = Math.floor(diffMs / 60000)
 
-  if (diffMins < 1) return 'gerade eben'
+  if (diffMins < 1) return 'jetzt'
   if (diffMins < 60) return `vor ${diffMins}m`
 
   const diffHours = Math.floor(diffMins / 60)
@@ -741,7 +742,6 @@ async function loadPosts() {
   posts.value = res.posts ?? []
 }
 
-// Chat functions
 async function loadMessages(postId: string) {
   try {
     const res = await $fetch<MessagesResult>('/api/messages', {
@@ -752,7 +752,6 @@ async function loadMessages(postId: string) {
       messages.value = res.messages
     }
 
-    // Start polling for new messages
     if (messagesPollingInterval) {
       clearInterval(messagesPollingInterval)
     }
@@ -768,7 +767,7 @@ async function loadMessages(postId: string) {
       } catch (err) {
         console.error('Error polling messages:', err)
       }
-    }, 1000) // Poll every second for new messages
+    }, 1000)
   } catch (err: any) {
     console.error('Error loading messages:', err)
   }
@@ -1082,6 +1081,11 @@ button:disabled {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.post-preview:hover img {
+  transform: scale(1.05);
 }
 
 .item-content {
@@ -1099,22 +1103,27 @@ button:disabled {
   padding: 0;
   cursor: pointer;
   color: var(--text-main);
-  font-size: inherit;
-  font-weight: inherit;
-  text-decoration: none;
   font-size: 16px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: color 0.2s ease;
 }
 
 .post-title-btn:hover {
-  text-decoration: underline;
   color: var(--accent);
 }
 
 .category-badge {
   margin: 4px 0 8px;
-  font-size: 12px;
+  padding: 4px 8px;
+  font-size: 11px;
   color: var(--text-muted);
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  display: inline-block;
 }
 
 .delete-btn {
@@ -1127,41 +1136,34 @@ button:disabled {
   font-weight: 600;
   cursor: pointer;
   font-size: 12px;
-  transition: background-color 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .delete-btn:hover {
   background-color: var(--danger-hover);
+  transform: scale(1.05);
 }
 
 .modal-backdrop {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: grid;
+  place-items: center;
   padding: 20px;
   z-index: 1000;
-  overflow: auto;
+  overflow-y: auto;
 }
 
 .new-post-backdrop {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: grid;
+  place-items: center;
   padding: 20px;
   z-index: 1000;
-  overflow: auto;
+  overflow-y: auto;
 }
 
 .new-post-modal {
@@ -1196,33 +1198,51 @@ button:disabled {
   gap: 24px;
 }
 
-@media (max-width: 768px) {
-  .modal-content-wrapper {
-    grid-template-columns: 1fr;
-  }
-}
-
 .modal-left {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
+.image-container {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--bg);
+}
+
 .modal-main-image {
   width: 100%;
-  border-radius: 8px;
-  object-fit: cover;
+  height: auto;
   max-height: 400px;
-}
-
-/* NEU: Styling für zoombare Bilder */
-.zoomable {
+  object-fit: cover;
+  display: block;
+  border-radius: 12px;
   cursor: zoom-in;
-  transition: opacity 0.2s ease;
+  transition: filter 0.2s ease;
 }
 
-.zoomable:hover {
-  opacity: 0.9;
+.modal-main-image:hover {
+  filter: brightness(0.9);
+}
+
+.zoom-hint {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.image-container:hover .zoom-hint {
+  opacity: 1;
 }
 
 .modal-left h2 {
@@ -1232,20 +1252,22 @@ button:disabled {
 .modal-category {
   color: var(--text-muted);
   font-weight: 600;
-  font-size: 14px;
+  font-size: 12px;
   margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .modal-description {
   margin: 0;
   color: var(--text-main);
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
 .modal-wishes {
   background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  border-left: 3px solid var(--accent);
+  border-radius: 6px;
   padding: 12px;
   margin-top: 8px;
 }
@@ -1259,6 +1281,7 @@ button:disabled {
 .modal-wishes p {
   margin: 0;
   color: var(--text-main);
+  font-size: 14px;
 }
 
 .modal-images {
@@ -1270,14 +1293,16 @@ button:disabled {
 .modal-images img {
   width: 100%;
   height: 100px;
-  border-radius: 6px;
+  border-radius: 8px;
   object-fit: cover;
-  cursor: pointer;
-  transition: transform 0.2s ease;
+  cursor: zoom-in;
+  transition: all 0.2s ease;
+  border: 1px solid var(--border);
 }
 
 .modal-images img:hover {
   transform: scale(1.05);
+  border-color: var(--accent);
 }
 
 .owner-info {
@@ -1293,18 +1318,21 @@ button:disabled {
 }
 
 .modal-delete-btn {
+  align-self: flex-start;
   background-color: var(--danger);
   color: var(--danger-text);
   border: none;
-  padding: 10px 20px;
+  padding: 10px 16px;
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  font-size: 13px;
+  transition: all 0.2s ease;
 }
 
 .modal-delete-btn:hover {
   background-color: var(--danger-hover);
+  transform: scale(1.05);
 }
 
 .modal-right {
@@ -1312,17 +1340,18 @@ button:disabled {
   flex-direction: column;
   gap: 12px;
   min-height: 400px;
+  border-left: 1px solid var(--border);
+  padding-left: 16px;
 }
 
 .chat-header {
-  padding: 12px;
-  background: var(--bg);
-  border-radius: 8px;
-  border: 1px solid var(--border);
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
 }
 
 .chat-header h3 {
   margin: 0 0 4px;
+  font-size: 16px;
 }
 
 .chat-info {
@@ -1333,97 +1362,124 @@ button:disabled {
 
 .chat-messages {
   flex-grow: 1;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 12px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 8px;
+  padding: 12px 0;
   max-height: 300px;
 }
 
 .no-messages {
   text-align: center;
   color: var(--text-muted);
-  padding: 20px;
+  padding: 40px 20px;
   font-style: italic;
+  font-size: 14px;
+  margin: auto;
 }
 
 .message {
-  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
   border-left: 3px solid var(--accent);
-  padding: 8px 12px;
+  padding: 8px 10px;
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 13px;
+  word-wrap: break-word;
 }
 
 .message.own {
-  background: color-mix(in srgb, var(--success) 10%, transparent);
+  background: color-mix(in srgb, var(--success) 8%, transparent);
   border-left-color: var(--success);
   margin-left: auto;
-  max-width: 80%;
+  max-width: 85%;
 }
 
 .message-author {
   display: flex;
-  gap: 8px;
-  align-items: center;
-  margin-bottom: 4px;
+  gap: 6px;
+  align-items: baseline;
+  margin-bottom: 3px;
 }
 
 .message-author strong {
   font-weight: 700;
+  font-size: 12px;
   color: var(--text-main);
 }
 
 .message-time {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--text-muted);
 }
 
 .message-content {
   color: var(--text-main);
-  word-wrap: break-word;
+  margin: 0;
+  line-height: 1.4;
 }
 
 .login-required {
   text-align: center;
   color: var(--text-muted);
-  padding: 12px;
+  padding: 16px 12px;
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  font-size: 13px;
+  margin: 8px 0;
 }
 
 .chat-form {
   display: flex;
-  gap: 8px;
+  gap: 6px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
 }
 
 .chat-form input {
   flex-grow: 1;
-  padding: 10px 12px;
+  padding: 8px 12px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 6px;
   background: var(--background);
   color: var(--text-main);
   font: inherit;
+  font-size: 13px;
+}
+
+.chat-form input::placeholder {
+  color: var(--text-muted);
+}
+
+.chat-form input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 20%, transparent);
 }
 
 .chat-form button {
-  background-color: var(--btn-secondary-bg);
-  color: var(--btn-secondary-text);
-  border: 1px solid var(--border);
-  padding: 10px 20px;
-  border-radius: 8px;
+  background-color: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 14px;
   font-weight: 600;
   cursor: pointer;
+  font-size: 14px;
   transition: all 0.2s ease;
-  white-space: nowrap;
+  min-width: 44px;
+  text-align: center;
 }
 
 .chat-form button:hover:not(:disabled) {
-  background-color: var(--btn-secondary-hover);
-  border-color: var(--accent);
+  opacity: 0.9;
+  transform: scale(1.05);
+}
+
+.chat-form button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .close-btn {
@@ -1442,82 +1498,156 @@ button:disabled {
   justify-content: center;
   border-radius: 50%;
   transition: all 0.2s ease;
+  z-index: 1;
 }
 
 .close-btn:hover {
-  background: var(--bg);
-  color: var(--accent);
+  background: var(--danger);
+  color: white;
 }
 
-/* NEU: Zoom Lightbox Styles */
 .zoom-backdrop {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(0, 0, 0, 0.85);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2000; /* Muss über dem normalen Modal liegen */
-  cursor: zoom-out;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.95);
+  display: grid;
+  place-items: center;
+  z-index: 2000;
+  padding: 40px 20px;
+  overflow: auto;
 }
 
 .zoom-image {
-  max-width: 90%;
-  max-height: 90vh;
+  max-width: 100%;
+  max-height: 100%;
   object-fit: contain;
-  border-radius: 6px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-  user-select: none;
+  border-radius: 8px;
+  animation: zoomIn 0.3s ease;
+}
+
+@keyframes zoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .zoom-close-btn {
   position: absolute;
   top: 20px;
   right: 20px;
-  background: transparent;
-  border: none;
-  color: #fff;
-  font-size: 35px;
-  font-weight: 300;
-  cursor: pointer;
   width: 44px;
   height: 44px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  font-size: 28px;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background-color: rgba(255, 255, 255, 0.1);
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
+  z-index: 2001;
 }
 
 .zoom-close-btn:hover {
-  background-color: rgba(255, 255, 255, 0.25);
+  background: rgba(0, 0, 0, 0.8);
+  border-color: rgba(255, 255, 255, 0.6);
+  transform: scale(1.1);
 }
 
-@media (max-width: 600px) {
-  .modal-backdrop,
-  .new-post-backdrop {
-    padding: 10px;
+@media (max-width: 900px) {
+  .modal-content-wrapper {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-right {
+    border-left: none;
+    border-top: 1px solid var(--border);
+    padding-left: 0;
+    padding-top: 16px;
+    min-height: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 0 12px;
+  }
+
+  .gallery {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
+  }
+
+  .item-image-wrapper {
+    height: 180px;
   }
 
   .modal,
   .new-post-modal {
     padding: 16px;
+    border-radius: 8px;
   }
 
-  .modal-content-wrapper {
-    gap: 16px;
+  .modal-left {
+    gap: 12px;
   }
 
   .chat-messages {
-    max-height: 200px;
+    max-height: 250px;
+  }
+
+  .preview-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    margin: 20px auto;
+  }
+
+  .gallery {
+    grid-template-columns: 1fr;
+  }
+
+  .upload-form {
+    padding: 16px;
+  }
+
+  .modal,
+  .new-post-modal {
+    width: 100%;
+    max-height: 100vh;
+    border-radius: 0;
+    padding: 12px;
+  }
+
+  .modal-main-image {
+    max-height: 300px;
+  }
+
+  .modal-right {
+    min-height: 300px;
+  }
+
+  .chat-form input {
+    font-size: 16px;
+  }
+
+  .preview-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
   }
 
   .message.own {
-    max-width: 100%;
+    max-width: 90%;
   }
 }
 </style>
