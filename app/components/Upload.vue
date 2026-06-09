@@ -13,7 +13,7 @@
           ×
         </button>
 
-        <h2>Tauschangebot erstellen</h2>
+        <h2>Tauschangegebote erstellen</h2>
 
         <p v-if="token" class="login-success">
           Eingeloggt als {{ role === 'admin' ? 'Admin' : 'User' }}
@@ -64,6 +64,17 @@
                 Anderes
               </option>
             </select>
+          </div>
+
+          <div class="form-group">
+            <label for="wishes">💡 Deine Wünsche (Optional)</label>
+            <textarea
+                id="wishes"
+                v-model="wishes"
+                maxlength="500"
+                rows="3"
+                placeholder="Was wünschst du dir? z.B. Filzstift, Radiergummi, Notizbuch..."
+            />
           </div>
 
           <div class="upload-controls">
@@ -219,9 +230,12 @@
 
         <div class="modal-content-wrapper">
           <div class="modal-left">
-            <button class="image-zoom-btn" @click="fullscreenImage = `/uploads/${selectedPost.mainImage}`">
-              <img :src="`/uploads/${selectedPost.mainImage}`" class="modal-main-image" alt="Hauptbild">
-            </button>
+            <img 
+              :src="`/uploads/${selectedPost.mainImage}`" 
+              class="modal-main-image zoomable" 
+              alt="Hauptbild"
+              @click="openZoom(`/uploads/${selectedPost.mainImage}`)"
+            >
 
             <h2>{{ selectedPost.title }}</h2>
 
@@ -233,18 +247,20 @@
               {{ selectedPost.description }}
             </p>
 
+            <div v-if="selectedPost.wishes" class="modal-wishes">
+              <strong>💡 Wünsche:</strong>
+              <p>{{ selectedPost.wishes }}</p>
+            </div>
+
             <div v-if="selectedPost.images.length > 1" class="modal-images">
-              <button
+              <img
                   v-for="image in selectedPost.images"
                   :key="image"
-                  class="image-zoom-btn thumb"
-                  @click="fullscreenImage = `/uploads/${image}`"
+                  :src="`/uploads/${image}`"
+                  alt="Weiteres Bild"
+                  class="zoomable"
+                  @click="openZoom(`/uploads/${image}`)"
               >
-                <img
-                    :src="`/uploads/${image}`"
-                    alt="Weiteres Bild"
-                >
-              </button>
             </div>
 
             <div class="owner-info">
@@ -262,7 +278,6 @@
             </button>
           </div>
 
-          <!-- Chat Section -->
           <div class="modal-right">
             <div class="chat-header">
               <h3>💬 Verhandlungen</h3>
@@ -304,18 +319,18 @@
       </section>
     </div>
 
-    <!-- Fullscreen Image Viewer -->
-    <div
-        v-if="fullscreenImage"
-        class="fullscreen-overlay"
-        role="button"
-        tabindex="0"
-        @click="fullscreenImage = null"
-        @keydown.esc="fullscreenImage = null"
+    <div 
+      v-if="zoomedImageUrl" 
+      class="zoom-backdrop" 
+      role="button"
+      tabindex="0"
+      @click="closeZoom"
+      @keydown.esc="closeZoom"
     >
-      <button class="close-fullscreen" @click="fullscreenImage = null">×</button>
-      <img :src="fullscreenImage" class="fullscreen-image" alt="Vollbild">
+      <button class="zoom-close-btn" type="button" @click="closeZoom">×</button>
+      <img :src="zoomedImageUrl" class="zoom-image" alt="Vergrößerte Ansicht">
     </div>
+
   </div>
 </template>
 
@@ -327,7 +342,6 @@ type ApiResult = {
   error?: string
 }
 
-// Alle Kategorien sind hier im Type definiert
 type TradeCategory = 'Schulmaterial' | 'Stifte' | 'Bücher' | 'Sportmaterialien' | 'Anderes'
 
 type TradePost = {
@@ -340,6 +354,7 @@ type TradePost = {
   ownerEmail: string
   ownerName: string
   createdAt: string
+  wishes?: string
 }
 
 type Message = {
@@ -370,6 +385,7 @@ const selectedCategory = ref<'Alle' | TradeCategory>('Alle')
 const title = ref('')
 const description = ref('')
 const category = ref<TradeCategory | ''>('')
+const wishes = ref('')
 const rulesAccepted = ref(false)
 
 const files = ref<File[]>([])
@@ -378,7 +394,9 @@ const mainImageIndex = ref(0)
 
 const posts = ref<TradePost[]>([])
 const selectedPost = ref<TradePost | null>(null)
-const fullscreenImage = ref<string | null>(null)
+
+// NEU: Zustand für die Zoom-Funktionalität
+const zoomedImageUrl = ref<string | null>(null)
 
 // Chat related
 const messages = ref<Message[]>([])
@@ -421,6 +439,9 @@ onMounted(() => {
   role.value = localStorage.getItem('role') as 'admin' | 'user' | null
   login.value = localStorage.getItem('login')
   loadPosts()
+  
+  // ESC-Key Eventlistener für das Schließen des Zoom-Modals hinzufügen
+  window.addEventListener('keydown', handleGlobalKeyDown)
 })
 
 onBeforeUnmount(() => {
@@ -433,6 +454,7 @@ onBeforeUnmount(() => {
   }
 
   clearPreviews()
+  window.removeEventListener('keydown', handleGlobalKeyDown)
 })
 
 // Scroll to bottom when messages update
@@ -443,6 +465,21 @@ watch(messages, () => {
     }
   }, 0)
 })
+
+// NEU: Zoom-Funktionen
+function openZoom(url: string) {
+  zoomedImageUrl.value = url
+}
+
+function closeZoom() {
+  zoomedImageUrl.value = null
+}
+
+function handleGlobalKeyDown(e: KeyboardEvent) {
+  if (e.key === 'Escape') {
+    closeZoom()
+  }
+}
 
 function formatTime(timestamp: string): string {
   const date = new Date(timestamp)
@@ -562,6 +599,7 @@ async function upload() {
     form.append('title', title.value.trim())
     form.append('description', description.value.trim())
     form.append('category', category.value)
+    form.append('wishes', wishes.value.trim())
     form.append('mainImageIndex', String(mainImageIndex.value))
     form.append('rulesAccepted', String(rulesAccepted.value))
 
@@ -593,7 +631,7 @@ async function upload() {
     let message = 'Ein Fehler ist aufgetreten'
     
     if (err.status === 413) {
-      message = 'Die hochgeladenen Bilder sind insgesamt zu groß für den Server (max. 100MB gesamt).'
+      message = 'Die hochgeladenen Bilder sind insgesamt zu groß für den Server (max. 20MB gesamt).'
     } else {
       message = err.data?.statusMessage || err.statusMessage || err.message || message
     }
@@ -608,6 +646,7 @@ function resetForm() {
   title.value = ''
   description.value = ''
   category.value = ''
+  wishes.value = ''
   rulesAccepted.value = false
   files.value = []
   mainImageIndex.value = 0
@@ -1020,243 +1059,247 @@ button:disabled {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  display: block;
-  transition: transform 0.3s ease;
-}
-
-.post-preview:hover img {
-  transform: scale(1.05);
 }
 
 .item-content {
-  padding: 16px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
+  flex-grow: 1;
 }
 
 .post-title-btn {
+  text-align: left;
   background: none;
   border: none;
   padding: 0;
   cursor: pointer;
-  text-align: left;
-  color: var(--text);
-}
-
-.post-title-btn strong {
-  display: block;
+  color: var(--text-main);
+  font-size: inherit;
+  font-weight: inherit;
+  text-decoration: none;
   font-size: 16px;
-  font-weight: 700;
-  line-height: 1.4;
-  transition: color 0.2s;
 }
 
-.post-title-btn:hover strong {
+.post-title-btn:hover {
+  text-decoration: underline;
   color: var(--accent);
 }
 
 .category-badge {
-  margin: 0;
-  padding: 6px 10px;
-  background-color: var(--bg);
-  color: var(--text-muted);
+  margin: 4px 0 8px;
   font-size: 12px;
+  color: var(--text-muted);
   font-weight: 600;
-  border-radius: 6px;
-  display: inline-block;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  border: 1px solid var(--border);
 }
 
 .delete-btn {
   align-self: flex-start;
-  background: var(--danger);
+  background-color: var(--danger);
   color: var(--danger-text);
   border: none;
-  padding: 8px 14px;
+  padding: 6px 12px;
   border-radius: 6px;
+  font-weight: 600;
   cursor: pointer;
   font-size: 12px;
-  font-weight: 600;
-  transition: all 0.2s;
+  transition: background-color 0.2s ease;
 }
 
 .delete-btn:hover {
-  background: var(--danger-hover);
-  transform: scale(1.05);
+  background-color: var(--danger-hover);
 }
 
-.new-post-backdrop,
 .modal-backdrop {
   position: fixed;
-  inset: 0;
-  z-index: 150;
-  display: grid;
-  place-items: center;
-  padding: 20px;
-  background: rgba(0, 0, 0, 0.6);
-}
-
-.modal {
-  position: relative;
-  width: min(720px, 100%);
-  max-height: 90vh;
-  overflow: auto;
-  background: var(--bg-surface);
-  color: var(--text);
-  border-radius: 18px;
-  padding: 24px;
-  text-align: left;
-}
-
-.modal-with-chat {
-  width: min(1200px, 100%);
-  padding: 0;
-  overflow: hidden;
-  display: flex;
-}
-
-.modal-content-wrapper {
-  display: flex;
-  gap: 0;
-  width: 100%;
-  height: 100%;
-  max-height: 90vh;
-}
-
-.modal-left {
-  flex: 1;
-  overflow-y: auto;
-  padding: 24px;
-  border-right: 1px solid var(--border);
-}
-
-.modal-right {
-  width: 350px;
-  display: flex;
-  flex-direction: column;
-  background-color: var(--bg);
-  overflow: hidden;
-}
-
-.new-post-modal {
-  position: relative;
-  width: min(720px, 100%);
-  max-height: 90vh;
-  overflow: auto;
-  background: var(--bg-surface);
-  color: var(--text);
-  border-radius: 18px;
-  padding: 24px;
-  text-align: left;
-}
-
-.close-btn {
-  position: absolute;
-  top: 14px;
-  right: 14px;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
-  padding: 0 0 3px;
-  border: 0;
-  border-radius: 999px;
-  background: var(--danger);
-  color: var(--danger-text);
-  cursor: pointer;
-  font-size: 24px;
-  font-weight: 700;
-  line-height: 1;
-  z-index: 10;
+  padding: 20px;
+  z-index: 1000;
+  overflow: auto;
+}
+
+.new-post-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 1000;
+  overflow: auto;
+}
+
+.new-post-modal {
+  background: var(--bg-surface);
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 800px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+.modal {
+  background: var(--bg-surface);
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 1200px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+.modal-with-chat {
+  max-height: 90vh;
+}
+
+.modal-content-wrapper {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+@media (max-width: 768px) {
+  .modal-content-wrapper {
+    grid-template-columns: 1fr;
+  }
+}
+
+.modal-left {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .modal-main-image {
   width: 100%;
-  max-height: 360px;
-  object-fit: contain;
-  border-radius: 14px;
-  margin-bottom: 16px;
-  background-color: var(--bg);
+  border-radius: 8px;
+  object-fit: cover;
+  max-height: 400px;
+}
+
+/* NEU: Styling für zoombare Bilder */
+.zoomable {
+  cursor: zoom-in;
+  transition: opacity 0.2s ease;
+}
+
+.zoomable:hover {
+  opacity: 0.9;
+}
+
+.modal-left h2 {
+  margin: 0;
 }
 
 .modal-category {
   color: var(--text-muted);
-  font-weight: 700;
+  font-weight: 600;
+  font-size: 14px;
+  margin: 0;
 }
 
 .modal-description {
-  white-space: pre-wrap;
-  line-height: 1.6;
+  margin: 0;
+  color: var(--text-main);
+  line-height: 1.5;
+}
+
+.modal-wishes {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  margin-top: 8px;
+}
+
+.modal-wishes strong {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--accent);
+}
+
+.modal-wishes p {
+  margin: 0;
+  color: var(--text-main);
 }
 
 .modal-images {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-  gap: 10px;
-  margin: 20px 0;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 8px;
 }
 
-.image-zoom-btn {
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: zoom-in;
+.modal-images img {
   width: 100%;
-  display: block;
-  border-radius: 14px;
-  overflow: hidden;
-  transition: opacity 0.2s;
-}
-
-.image-zoom-btn:hover {
-  opacity: 0.9;
-}
-
-.image-zoom-btn.thumb {
   height: 100px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
+  border-radius: 6px;
+  object-fit: cover;
+  cursor: pointer;
+  transition: transform 0.2s ease;
 }
 
-.image-zoom-btn img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  display: block;
-  background-color: var(--bg);
+.modal-images img:hover {
+  transform: scale(1.05);
 }
 
 .owner-info {
-  border-top: 1px solid var(--border);
-  margin-top: 20px;
-  padding-top: 16px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 14px;
+}
+
+.owner-info p {
+  margin: 6px 0;
 }
 
 .modal-delete-btn {
-  background: var(--danger);
+  background-color: var(--danger);
   color: var(--danger-text);
-  border: 0;
-  border-radius: 10px;
-  padding: 10px 14px;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
   cursor: pointer;
-  font-weight: 700;
-  margin-top: 10px;
+  transition: background-color 0.2s ease;
 }
 
-/* Chat styles */
+.modal-delete-btn:hover {
+  background-color: var(--danger-hover);
+}
+
+.modal-right {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 400px;
+}
+
 .chat-header {
-  padding: 16px;
-  border-bottom: 1px solid var(--border);
-  background-color: var(--bg-surface);
+  padding: 12px;
+  background: var(--bg);
+  border-radius: 8px;
+  border: 1px solid var(--border);
 }
 
 .chat-header h3 {
   margin: 0 0 4px;
-  font-size: 16px;
 }
 
 .chat-info {
@@ -1266,247 +1309,192 @@ button:disabled {
 }
 
 .chat-messages {
-  flex: 1;
+  flex-grow: 1;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
   overflow-y: auto;
-  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
+  max-height: 300px;
 }
 
 .no-messages {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  color: var(--text-muted);
   text-align: center;
+  color: var(--text-muted);
+  padding: 20px;
+  font-style: italic;
 }
 
 .message {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 12px;
-  border-radius: 8px;
-  background-color: var(--bg);
-  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  border-left: 3px solid var(--accent);
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 14px;
 }
 
 .message.own {
-  background-color: var(--accent);
-  color: white;
-  border-color: var(--accent);
-  align-self: flex-end;
-  max-width: 85%;
+  background: color-mix(in srgb, var(--success) 10%, transparent);
+  border-left-color: var(--success);
+  margin-left: auto;
+  max-width: 80%;
 }
 
 .message-author {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
   gap: 8px;
+  align-items: center;
+  margin-bottom: 4px;
 }
 
 .message-author strong {
   font-weight: 700;
-  font-size: 13px;
+  color: var(--text-main);
 }
 
 .message-time {
-  font-size: 11px;
-  opacity: 0.7;
+  font-size: 12px;
+  color: var(--text-muted);
 }
 
 .message-content {
+  color: var(--text-main);
   word-wrap: break-word;
-  font-size: 14px;
-  line-height: 1.4;
 }
 
 .login-required {
-  padding: 16px;
   text-align: center;
   color: var(--text-muted);
-  border-top: 1px solid var(--border);
+  padding: 12px;
 }
 
 .chat-form {
   display: flex;
   gap: 8px;
-  padding: 12px;
-  border-top: 1px solid var(--border);
-  background-color: var(--bg-surface);
 }
 
 .chat-form input {
-  flex: 1;
+  flex-grow: 1;
+  padding: 10px 12px;
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 10px 12px;
   background: var(--background);
   color: var(--text-main);
   font: inherit;
-  font-size: 13px;
-}
-
-.chat-form input:disabled {
-  opacity: 0.6;
 }
 
 .chat-form button {
-  background: var(--accent);
-  color: white;
-  border: none;
+  background-color: var(--btn-secondary-bg);
+  color: var(--btn-secondary-text);
+  border: 1px solid var(--border);
+  padding: 10px 20px;
   border-radius: 8px;
-  padding: 10px 16px;
   font-weight: 600;
   cursor: pointer;
-  font-size: 13px;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
 .chat-form button:hover:not(:disabled) {
-  opacity: 0.9;
+  background-color: var(--btn-secondary-hover);
+  border-color: var(--accent);
 }
 
-.up-top {
-  z-index: 3;
-  margin-top: 20px;
-}
-
-.fullscreen-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 200;
-  background: rgba(0, 0, 0, 0.95);
-  display: grid;
-  place-items: center;
-  padding: 40px;
-  cursor: zoom-out;
-}
-
-.fullscreen-image {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-  box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
-  border-radius: 8px;
-}
-
-.close-fullscreen {
+.close-btn {
   position: absolute;
-  top: 24px;
-  right: 24px;
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  font-size: 28px;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: var(--text-main);
+  font-size: 24px;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+  background: var(--bg);
+  color: var(--accent);
+}
+
+/* NEU: Zoom Lightbox Styles */
+.zoom-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000; /* Muss über dem normalen Modal liegen */
+  cursor: zoom-out;
+}
+
+.zoom-image {
+  max-width: 90%;
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: 6px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  user-select: none;
+}
+
+.zoom-close-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 35px;
+  font-weight: 300;
   cursor: pointer;
-  transition: all 0.2s;
-  z-index: 210;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.1);
+  transition: background-color 0.2s;
 }
 
-.close-fullscreen:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: scale(1.1);
+.zoom-close-btn:hover {
+  background-color: rgba(255, 255, 255, 0.25);
 }
 
-/* Responsive design */
-@media (max-width: 900px) {
-  .modal-with-chat {
-    flex-direction: column;
+@media (max-width: 600px) {
+  .modal-backdrop,
+  .new-post-backdrop {
+    padding: 10px;
   }
 
-  .modal-left {
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-    max-height: 50%;
-  }
-
-  .modal-right {
-    width: 100%;
-  }
-}
-
-@media (max-width: 768px) {
-  .gallery {
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 16px;
-  }
-
-  .item-image-wrapper {
-    height: 180px;
-  }
-
-  .item-content {
-    padding: 14px;
-    gap: 10px;
-  }
-
-  .post-title-btn strong {
-    font-size: 15px;
-  }
-
-  .modal-left {
+  .modal,
+  .new-post-modal {
     padding: 16px;
   }
 
-  .chat-form input {
-    font-size: 12px;
-  }
-}
-
-@media (max-width: 480px) {
-  .gallery {
-    grid-template-columns: 1fr;
-  }
-
-  .item-image-wrapper {
-    height: 200px;
-  }
-
-  .gallery-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .category-filter {
-    width: 100%;
-  }
-
-  .category-filter select {
-    flex: 1;
-    min-width: unset;
-  }
-
-  .modal {
-    width: 100% !important;
-    max-height: 100vh;
-    border-radius: 0;
-    padding: 0;
-  }
-
   .modal-content-wrapper {
-    flex-direction: column;
+    gap: 16px;
   }
 
-  .modal-left {
-    max-height: none;
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-    overflow-y: auto;
-    max-height: 50%;
+  .chat-messages {
+    max-height: 200px;
   }
 
-  .modal-right {
-    width: 100%;
+  .message.own {
+    max-width: 100%;
   }
 }
 </style>
