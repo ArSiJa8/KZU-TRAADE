@@ -13,6 +13,8 @@ const stats = ref<{
   }>
 } | null>(null)
 
+const blocklist = ref<string[]>([])
+const newWord = ref('')
 const redirectUrl = ref('')
 const loading = ref(false)
 const error = ref('')
@@ -22,7 +24,7 @@ async function fetchStats() {
   error.value = ''
   try {
     const token = localStorage.getItem('token')
-    const data = await $fetch('/api/admin-stats', {
+    const data = await $fetch('/api/admin/stats', {
       headers: { Authorization: `Bearer ${token}` }
     })
     stats.value = data as any
@@ -33,13 +35,57 @@ async function fetchStats() {
   }
 }
 
+async function fetchBlocklist() {
+  try {
+    const token = localStorage.getItem('token')
+    const res = await $fetch<{ words: string[] }>('/api/admin/blocklist', {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    blocklist.value = res.words
+  } catch (e: any) {
+    console.error('Fehler beim Laden der Blocklist', e)
+  }
+}
+
+async function addWord() {
+  if (!newWord.value.trim()) return
+  const word = newWord.value.trim().toLowerCase()
+  if (blocklist.value.includes(word)) {
+    newWord.value = ''
+    return
+  }
+  
+  const newList = [...blocklist.value, word]
+  await saveBlocklist(newList)
+  newWord.value = ''
+}
+
+async function removeWord(word: string) {
+  const newList = blocklist.value.filter(w => w !== word)
+  await saveBlocklist(newList)
+}
+
+async function saveBlocklist(words: string[]) {
+  try {
+    const token = localStorage.getItem('token')
+    await $fetch('/api/admin/blocklist', {
+      method: 'POST',
+      body: { words },
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    blocklist.value = words
+  } catch (e: any) {
+    alert('Fehler beim Speichern: ' + (e.data?.statusMessage || e.message))
+  }
+}
+
 async function sendRedirect(targetId?: string) {
   const url = targetId ? prompt('URL für diesen Nutzer eingeben:', 'https://google.com') : redirectUrl.value
   if (!url) return
   
   try {
     const token = localStorage.getItem('token')
-    await $fetch('/api/admin-stats', {
+    await $fetch('/api/admin/stats', {
       method: 'POST',
       body: { url, targetId },
       headers: { Authorization: `Bearer ${token}` }
@@ -56,6 +102,7 @@ let interval: any = null
 onMounted(() => {
   if (role.value === 'admin') {
     fetchStats()
+    fetchBlocklist()
     interval = setInterval(fetchStats, 5000) // Auto-refresh every 5s
   }
 })
@@ -91,6 +138,27 @@ onUnmounted(() => {
           <p class="stat-value">{{ stats?.onlineCount || 0 }}</p>
         </div>
       </div>
+
+      <section class="blocklist-section">
+        <h2>Wörter Blockliste</h2>
+        <div class="blocklist-form">
+          <input 
+            v-model="newWord" 
+            type="text" 
+            placeholder="Neues Schimpfwort..." 
+            class="url-input"
+            @keyup.enter="addWord"
+          >
+          <button class="add-btn" @click="addWord">Hinzufügen</button>
+        </div>
+        <div class="words-container">
+          <span v-for="word in blocklist" :key="word" class="word-tag">
+            {{ word }}
+            <button class="remove-word" @click="removeWord(word)">×</button>
+          </span>
+          <p v-if="blocklist.length === 0" class="empty-msg">Keine Wörter auf der Liste.</p>
+        </div>
+      </section>
 
       <section class="redirect-section">
         <h2>Nutzer umleiten</h2>
@@ -196,6 +264,62 @@ onUnmounted(() => {
   font-weight: 800;
   margin: 10px 0 0;
   color: var(--blue-400);
+}
+
+.blocklist-section {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  padding: 24px;
+  border-radius: 16px;
+}
+
+.blocklist-form {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+  margin-bottom: 20px;
+}
+
+.add-btn {
+  padding: 12px 24px;
+  background: var(--blue-600);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.words-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.word-tag {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  padding: 6px 12px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+}
+
+.remove-word {
+  background: none;
+  border: none;
+  color: var(--red-500);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.empty-msg {
+  color: var(--neutral-400);
+  font-style: italic;
 }
 
 .redirect-section {

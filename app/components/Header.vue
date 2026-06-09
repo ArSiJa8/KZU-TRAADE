@@ -56,8 +56,11 @@ function showAuthError(message: string) {
   })
 }
 
+const isAuthenticating = ref(false)
+
 async function register() {
   clearAuthError()
+  isAuthenticating.value = true
 
   try {
     const res = await $fetch<ApiResult>('/api/register', {
@@ -82,11 +85,14 @@ async function register() {
   } catch (err: any) {
     const message = err.data?.statusMessage || err.statusMessage || err.message || 'Registrierung fehlgeschlagen'
     showAuthError(message)
+  } finally {
+    isAuthenticating.value = false
   }
 }
 
 async function login() {
   clearAuthError()
+  isAuthenticating.value = true
 
   try {
     const res = await $fetch<LoginResult>('/api/login', {
@@ -122,10 +128,15 @@ async function login() {
   } catch (err: any) {
     const message = err.data?.statusMessage || err.statusMessage || err.message || 'Login fehlgeschlagen'
     showAuthError(message)
+  } finally {
+    isAuthenticating.value = false
   }
 }
 
-function openNewPost() {
+async function openNewPost() {
+  if (useRoute().path !== '/') {
+    await navigateTo('/')
+  }
   newPostOpen.value = true
   menuOpen.value = false
   authOpen.value = false
@@ -170,13 +181,13 @@ function logout() {
 
 
 
-        <a href="#gallery" @click="closeMenus">
+        <NuxtLink to="/#gallery" @click="closeMenus">
           Galerie
-        </a>
+        </NuxtLink>
 
-        <a href="#about" @click="closeMenus">
+        <NuxtLink to="/#about" @click="closeMenus">
           Über uns
-        </a>
+        </NuxtLink>
 
         <NuxtLink v-if="role === 'admin'" to="/admin" @click="closeMenus">
           Admin
@@ -243,8 +254,12 @@ function logout() {
                   @keyup.enter="login"
               >
 
-              <button type="button" @click="login">
-                Einloggen
+              <button
+                  type="button"
+                  :disabled="isAuthenticating"
+                  @click="login"
+              >
+                {{ isAuthenticating ? 'Wird eingeloggt...' : 'Einloggen' }}
               </button>
             </template>
 
@@ -265,8 +280,12 @@ function logout() {
                   @keyup.enter="register"
               >
 
-              <button type="button" @click="register">
-                Account erstellen
+              <button
+                  type="button"
+                  :disabled="isAuthenticating"
+                  @click="register"
+              >
+                {{ isAuthenticating ? 'Wird erstellt...' : 'Account erstellen' }}
               </button>
             </template>
 
@@ -289,36 +308,37 @@ function logout() {
   top: 0;
   z-index: 100;
   display: flex;
-  height: 40px;
+  min-height: 44px;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
-  padding: 14px clamp(18px, 4vw, 56px);
-  background: color-mix(in srgb, var(--background) 82%, transparent);
+  gap: 16px;
+  padding: 12px clamp(16px, 4vw, 48px);
+  background: color-mix(in srgb, var(--background) 85%, transparent);
   border-bottom: 1px solid var(--border);
-  backdrop-filter: blur(25px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
 }
 
 .logo {
   color: var(--neutral-100);
   text-decoration: none;
-  font-size: clamp(1.25rem, 2vw, 1.8rem);
+  font-size: clamp(1.2rem, 2vw, 1.6rem);
   font-weight: 800;
   letter-spacing: -0.04em;
   mix-blend-mode: difference;
   isolation: isolate;
+  flex-shrink: 0;
 }
 
 .header-content {
   display: flex;
   align-items: center;
-  gap: 28px;
+  gap: 24px;
 }
 
 .nav {
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 16px;
 }
 
 .nav a,
@@ -326,18 +346,20 @@ function logout() {
   color: var(--neutral-200);
   text-decoration: none;
   font-weight: 600;
+  font-size: 0.95rem;
   transition: color 0.2s ease;
 }
 
 .nav-button {
-  padding: 8px 14px;
+  padding: 7px 14px;
   background: var(--btn-primary-bg);
   color: var(--btn-primary-text);
   border: 1px solid var(--blue-500);
-  border-radius: 15px;
+  border-radius: 12px;
   font: inherit;
   font-weight: 700;
   cursor: pointer;
+  white-space: nowrap;
   transition:
     background 0.2s ease,
     border-color 0.2s ease,
@@ -363,50 +385,56 @@ function logout() {
 }
 
 .user-badge {
-  padding: 8px 12px;
+  padding: 6px 12px;
   border: 1px solid var(--border);
   border-radius: 999px;
   color: var(--neutral-100);
   background: var(--bg-surface);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 700;
 }
 
 .login-toggle,
 .logout-btn {
   white-space: nowrap;
+  font-size: 0.95rem;
 }
 
 .logout-btn {
   background: transparent;
   color: var(--text-main);
   border: 1px solid var(--border);
+  padding: 7px 14px;
 }
 
 .auth-panel {
   position: absolute;
-  top: calc(100% + 14px);
+  top: calc(100% + 12px);
   right: 0;
   width: min(320px, calc(100vw - 32px));
   display: grid;
   gap: 12px;
-  padding: 16px;
+  padding: 20px;
   background: var(--bg-surface);
   border: 1px solid var(--border);
   border-radius: 18px;
-  box-shadow: 0 20px 50px color-mix(in srgb, var(--neutral-900) 70%, transparent);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  z-index: 1000;
 }
 
 .auth-tabs {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
+  margin-bottom: 4px;
 }
 
 .auth-tabs button {
   background: var(--neutral-700);
-  color: var(--blue-400);
+  color: var(--neutral-300);
   border: 1px solid var(--border);
+  padding: 8px;
+  font-size: 0.9rem;
 }
 
 .auth-tabs button.active {
@@ -420,9 +448,9 @@ function logout() {
   box-sizing: border-box;
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 11px 13px;
+  padding: 12px;
   background: var(--bg-input);
-  color: var(--neutral-700);
+  color: var(--neutral-900);
   font-size: 0.95rem;
 }
 
@@ -431,11 +459,11 @@ function logout() {
   padding: 10px 12px;
   border: 1px solid var(--red-600);
   border-radius: 10px;
-  background: color-mix(in srgb, var(--red-800) 28%, transparent);
+  background: rgba(215, 36, 36, 0.15);
   color: var(--red-300);
-  font-size: 0.9rem;
-  font-weight: 700;
-  line-height: 1.35;
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1.4;
 }
 
 .auth-error.shake {
@@ -443,39 +471,20 @@ function logout() {
 }
 
 @keyframes shake-error {
-  0% {
-    transform: translateX(0);
-  }
-
-  20% {
-    transform: translateX(-7px);
-  }
-
-  40% {
-    transform: translateX(7px);
-  }
-
-  60% {
-    transform: translateX(-5px);
-  }
-
-  80% {
-    transform: translateX(5px);
-  }
-
-  100% {
-    transform: translateX(0);
-  }
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-5px); }
+  40%, 80% { transform: translateX(5px); }
 }
 
 .hamburger {
   display: none;
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   padding: 0;
   background: var(--bg-surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 10px;
+  cursor: pointer;
 }
 
 .hamburger span {
@@ -485,25 +494,29 @@ function logout() {
   margin: 4px auto;
   background: var(--neutral-100);
   border-radius: 999px;
+  transition: 0.3s;
 }
 
-@media (max-width: 820px) {
+@media (max-width: 920px) {
   .hamburger {
     display: block;
   }
 
   .header-content {
     position: absolute;
-    top: calc(100% + 1px);
+    top: 100%;
     left: 0;
     right: 0;
     display: none;
     flex-direction: column;
     align-items: stretch;
-    gap: 18px;
-    padding: 18px;
+    gap: 20px;
+    padding: 24px;
     background: var(--background);
     border-bottom: 1px solid var(--border);
+    max-height: calc(100vh - 70px);
+    overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
   }
 
   .header-content.open {
@@ -513,32 +526,40 @@ function logout() {
   .nav {
     flex-direction: column;
     align-items: stretch;
-    gap: 8px;
+    gap: 10px;
   }
 
   .nav a,
   .nav-button {
-    padding: 12px;
+    padding: 14px;
     border-radius: 12px;
     background: var(--bg-surface);
     text-align: left;
+    border: 1px solid var(--border);
   }
 
   .nav-button {
     background: var(--btn-primary-bg);
     color: var(--btn-primary-text);
-    border: 1px solid var(--blue-500);
+    border-color: var(--blue-500);
     text-align: center;
   }
 
   .auth-area {
     align-items: stretch;
     flex-direction: column;
+    border-top: 1px solid var(--border);
+    padding-top: 20px;
   }
 
   .auth-panel {
     position: static;
     width: 100%;
+    box-shadow: none;
+    padding: 0;
+    margin-top: 12px;
+    background: transparent;
+    border: none;
   }
 }
 
@@ -552,11 +573,11 @@ function logout() {
   background: var(--danger);
   color: var(--danger-text);
   border-radius: 999px;
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
   padding: 0;
   cursor: pointer;
-  font-size: 22px;
+  font-size: 20px;
   line-height: 1;
 }
 </style>

@@ -73,8 +73,8 @@ export default defineEventHandler(async (event) => {
             throw createError({ statusCode: 400, statusMessage: 'Ungültiges Dateiformat' })
         }
 
-        if (file.data.length > 20 * 1024 * 1024) {
-            throw createError({ statusCode: 400, statusMessage: 'Eine Datei ist zu groß (max. 20 MB)' })
+        if (file.data.length > 100 * 1024 * 1024) {
+            throw createError({ statusCode: 400, statusMessage: 'Eine Datei ist zu groß (max. 100 MB)' })
         }
 
         const original = file.filename || 'bild'

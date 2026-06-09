@@ -219,7 +219,9 @@
 
         <div class="modal-content-wrapper">
           <div class="modal-left">
-            <img :src="`/uploads/${selectedPost.mainImage}`" class="modal-main-image" alt="Hauptbild">
+            <button class="image-zoom-btn" @click="fullscreenImage = `/uploads/${selectedPost.mainImage}`">
+              <img :src="`/uploads/${selectedPost.mainImage}`" class="modal-main-image" alt="Hauptbild">
+            </button>
 
             <h2>{{ selectedPost.title }}</h2>
 
@@ -232,12 +234,17 @@
             </p>
 
             <div v-if="selectedPost.images.length > 1" class="modal-images">
-              <img
+              <button
                   v-for="image in selectedPost.images"
                   :key="image"
-                  :src="`/uploads/${image}`"
-                  alt="Weiteres Bild"
+                  class="image-zoom-btn thumb"
+                  @click="fullscreenImage = `/uploads/${image}`"
               >
+                <img
+                    :src="`/uploads/${image}`"
+                    alt="Weiteres Bild"
+                >
+              </button>
             </div>
 
             <div class="owner-info">
@@ -295,6 +302,19 @@
           </div>
         </div>
       </section>
+    </div>
+
+    <!-- Fullscreen Image Viewer -->
+    <div
+        v-if="fullscreenImage"
+        class="fullscreen-overlay"
+        role="button"
+        tabindex="0"
+        @click="fullscreenImage = null"
+        @keydown.esc="fullscreenImage = null"
+    >
+      <button class="close-fullscreen" @click="fullscreenImage = null">×</button>
+      <img :src="fullscreenImage" class="fullscreen-image" alt="Vollbild">
     </div>
   </div>
 </template>
@@ -358,6 +378,7 @@ const mainImageIndex = ref(0)
 
 const posts = ref<TradePost[]>([])
 const selectedPost = ref<TradePost | null>(null)
+const fullscreenImage = ref<string | null>(null)
 
 // Chat related
 const messages = ref<Message[]>([])
@@ -572,7 +593,7 @@ async function upload() {
     let message = 'Ein Fehler ist aufgetreten'
     
     if (err.status === 413) {
-      message = 'Die hochgeladenen Bilder sind insgesamt zu groß für den Server (max. 20MB gesamt).'
+      message = 'Die hochgeladenen Bilder sind insgesamt zu groß für den Server (max. 100MB gesamt).'
     } else {
       message = err.data?.statusMessage || err.statusMessage || err.message || message
     }
@@ -1156,9 +1177,10 @@ button:disabled {
 .modal-main-image {
   width: 100%;
   max-height: 360px;
-  object-fit: cover;
+  object-fit: contain;
   border-radius: 14px;
   margin-bottom: 16px;
+  background-color: var(--bg);
 }
 
 .modal-category {
@@ -1178,12 +1200,34 @@ button:disabled {
   margin: 20px 0;
 }
 
-.modal-images img {
+.image-zoom-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: zoom-in;
   width: 100%;
+  display: block;
+  border-radius: 14px;
+  overflow: hidden;
+  transition: opacity 0.2s;
+}
+
+.image-zoom-btn:hover {
+  opacity: 0.9;
+}
+
+.image-zoom-btn.thumb {
   height: 100px;
-  object-fit: cover;
   border-radius: 10px;
   border: 1px solid var(--border);
+}
+
+.image-zoom-btn img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  background-color: var(--bg);
 }
 
 .owner-info {
@@ -1328,7 +1372,50 @@ button:disabled {
 
 .up-top {
   z-index: 3;
-  margin-top: -70px;
+  margin-top: 20px;
+}
+
+.fullscreen-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(0, 0, 0, 0.95);
+  display: grid;
+  place-items: center;
+  padding: 40px;
+  cursor: zoom-out;
+}
+
+.fullscreen-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
+  border-radius: 8px;
+}
+
+.close-fullscreen {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  font-size: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  z-index: 210;
+}
+
+.close-fullscreen:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
 }
 
 /* Responsive design */

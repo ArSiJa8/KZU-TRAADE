@@ -23,11 +23,21 @@ type MessagesResult = {
 }
 
 const messagesFile = path.join(process.cwd(), 'server', 'data', 'messages.json')
+const blocklistFile = path.join(process.cwd(), 'server', 'data', 'blocklist.json')
 
 async function readMessages(): Promise<Message[]> {
     try {
         const content = await readFile(messagesFile, 'utf-8')
         return JSON.parse(content) as Message[]
+    } catch {
+        return []
+    }
+}
+
+async function readBlocklist(): Promise<string[]> {
+    try {
+        const content = await readFile(blocklistFile, 'utf-8')
+        return JSON.parse(content) as string[]
     } catch {
         return []
     }
@@ -104,13 +114,22 @@ export default defineEventHandler(async (event): Promise<MessagesResult> => {
         }
     }
 
+    let finalContent = content.trim()
+    const blocklist = await readBlocklist()
+    const lowerContent = finalContent.toLowerCase()
+
+    const foundBlocked = blocklist.some(word => lowerContent.includes(word.toLowerCase()))
+    if (foundBlocked) {
+        finalContent = '[GEBLOCKTER INHALT]'
+    }
+
     // Neue Nachricht erstellen
     const message: Message = {
         id: `${Date.now()}_${Math.random().toString(36).slice(2)}`,
         postId,
         author: getUserNameFromEmail(payload.login),
         authorEmail: payload.login,
-        content: content.trim(),
+        content: finalContent,
         createdAt: new Date().toISOString()
     }
 

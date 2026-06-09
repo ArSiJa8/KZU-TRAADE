@@ -16,5 +16,23 @@
     "email": "silvan.hofstetter@stud.kzu.ch",
     "passwordHash": "5a1268aec2b1b49681d6656435c044e02117f7c167deba1b47744654fb238be0",
     "role": "admin"
+  },
+  {
+    "id": "567b4f44-c40a-45be-95d9-77a789579f0e",
+    "email": "sandro.bressan@stud.kzu.ch",
+    "passwordHash": "42684de9212dd4d601c5fd6c1d8d90ae7c80725609579f3a4b9982f82a38728f",
+    "role": "user"
+  },
+  {
+    "id": "73968bd7-fd27-4696-b49b-b5c54626c0b7",
+    "email": "hallo@kzu.ch",
+    "passwordHash": "9b184ec2285785a2c0cb5b8aa4bc84193181133428954d0ee88cb1309530d72f",
+    "role": "user"
+  },
+  {
+    "id": "012cad62-511e-4853-a62f-b9c75860eff9",
+    "email": "1@kzu.ch",
+    "passwordHash": "d3751d33f9cd5049c4af2b462735457e4d3baf130bcbb87f389e349fbaeb20b9",
+    "role": "user"
   }
 ]
