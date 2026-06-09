@@ -13,7 +13,7 @@
           ×
         </button>
 
-        <h2>Tauschangebot erstellen</h2>
+        <h2>Tauschangegebote erstellen</h2>
 
         <p v-if="token" class="login-success">
           Eingeloggt als {{ role === 'admin' ? 'Admin' : 'User' }}
@@ -230,7 +230,12 @@
 
         <div class="modal-content-wrapper">
           <div class="modal-left">
-            <img :src="`/uploads/${selectedPost.mainImage}`" class="modal-main-image" alt="Hauptbild">
+            <img 
+              :src="`/uploads/${selectedPost.mainImage}`" 
+              class="modal-main-image zoomable" 
+              alt="Hauptbild"
+              @click="openZoom(`/uploads/${selectedPost.mainImage}`)"
+            >
 
             <h2>{{ selectedPost.title }}</h2>
 
@@ -253,6 +258,8 @@
                   :key="image"
                   :src="`/uploads/${image}`"
                   alt="Weiteres Bild"
+                  class="zoomable"
+                  @click="openZoom(`/uploads/${image}`)"
               >
             </div>
 
@@ -271,7 +278,6 @@
             </button>
           </div>
 
-          <!-- Chat Section -->
           <div class="modal-right">
             <div class="chat-header">
               <h3>💬 Verhandlungen</h3>
@@ -312,6 +318,19 @@
         </div>
       </section>
     </div>
+
+    <div 
+      v-if="zoomedImageUrl" 
+      class="zoom-backdrop" 
+      role="button"
+      tabindex="0"
+      @click="closeZoom"
+      @keydown.esc="closeZoom"
+    >
+      <button class="zoom-close-btn" type="button" @click="closeZoom">×</button>
+      <img :src="zoomedImageUrl" class="zoom-image" alt="Vergrößerte Ansicht">
+    </div>
+
   </div>
 </template>
 
@@ -323,7 +342,6 @@ type ApiResult = {
   error?: string
 }
 
-// Alle Kategorien sind hier im Type definiert
 type TradeCategory = 'Schulmaterial' | 'Stifte' | 'Bücher' | 'Sportmaterialien' | 'Anderes'
 
 type TradePost = {
@@ -377,6 +395,9 @@ const mainImageIndex = ref(0)
 const posts = ref<TradePost[]>([])
 const selectedPost = ref<TradePost | null>(null)
 
+// NEU: Zustand für die Zoom-Funktionalität
+const zoomedImageUrl = ref<string | null>(null)
+
 // Chat related
 const messages = ref<Message[]>([])
 const newMessage = ref('')
@@ -418,6 +439,9 @@ onMounted(() => {
   role.value = localStorage.getItem('role') as 'admin' | 'user' | null
   login.value = localStorage.getItem('login')
   loadPosts()
+  
+  // ESC-Key Eventlistener für das Schließen des Zoom-Modals hinzufügen
+  window.addEventListener('keydown', handleGlobalKeyDown)
 })
 
 onBeforeUnmount(() => {
@@ -430,6 +454,7 @@ onBeforeUnmount(() => {
   }
 
   clearPreviews()
+  window.removeEventListener('keydown', handleGlobalKeyDown)
 })
 
 // Scroll to bottom when messages update
@@ -440,6 +465,21 @@ watch(messages, () => {
     }
   }, 0)
 })
+
+// NEU: Zoom-Funktionen
+function openZoom(url: string) {
+  zoomedImageUrl.value = url
+}
+
+function closeZoom() {
+  zoomedImageUrl.value = null
+}
+
+function handleGlobalKeyDown(e: KeyboardEvent) {
+  if (e.key === 'Escape') {
+    closeZoom()
+  }
+}
 
 function formatTime(timestamp: string): string {
   const date = new Date(timestamp)
@@ -1152,6 +1192,16 @@ button:disabled {
   max-height: 400px;
 }
 
+/* NEU: Styling für zoombare Bilder */
+.zoomable {
+  cursor: zoom-in;
+  transition: opacity 0.2s ease;
+}
+
+.zoomable:hover {
+  opacity: 0.9;
+}
+
 .modal-left h2 {
   margin: 0;
 }
@@ -1374,6 +1424,54 @@ button:disabled {
 .close-btn:hover {
   background: var(--bg);
   color: var(--accent);
+}
+
+/* NEU: Zoom Lightbox Styles */
+.zoom-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000; /* Muss über dem normalen Modal liegen */
+  cursor: zoom-out;
+}
+
+.zoom-image {
+  max-width: 90%;
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: 6px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  user-select: none;
+}
+
+.zoom-close-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 35px;
+  font-weight: 300;
+  cursor: pointer;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.1);
+  transition: background-color 0.2s;
+}
+
+.zoom-close-btn:hover {
+  background-color: rgba(255, 255, 255, 0.25);
 }
 
 @media (max-width: 600px) {
