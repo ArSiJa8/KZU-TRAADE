@@ -87,10 +87,11 @@
                 type="file"
                 accept="image/*"
                 multiple
+                :disabled="isUploading || isCompressing"
                 @change="previewImages"
             >
 
-            <button :disabled="isUploading || uploadCooldown > 0">
+            <button :disabled="isUploading || isCompressing || uploadCooldown > 0">
               {{ uploadButtonText }}
             </button>
           </div>
@@ -336,6 +337,7 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { compressImage } from '../utils/imageCompressor'
 
 type ApiResult = {
   success?: boolean
@@ -418,11 +420,16 @@ const login = useState<string | null>('authLogin', () => null)
 
 const uploadCooldown = ref(0)
 const isUploading = ref(false)
+const isCompressing = ref(false)
 
 let uploadCooldownInterval: ReturnType<typeof setInterval> | null = null
 let messagesPollingInterval: ReturnType<typeof setInterval> | null = null
 
 const uploadButtonText = computed(() => {
+  if (isCompressing.value) {
+    return 'Bilder werden verarbeitet...'
+  }
+
   if (isUploading.value) {
     return 'Wird hochgeladen...'
   }
@@ -512,17 +519,33 @@ function clearPreviews() {
   previews.value = []
 }
 
-function previewImages(e: Event) {
+async function previewImages(e: Event) {
   const target = e.target as HTMLInputElement
+  if (!target.files || target.files.length === 0) {
+    return
+  }
 
   clearPreviews()
+  isCompressing.value = true
 
-  files.value = Array.from(target.files ?? []).slice(0, 8)
-  previews.value = files.value.map((file) => ({
-    file,
-    url: URL.createObjectURL(file)
-  }))
-  mainImageIndex.value = 0
+  try {
+    const rawFiles = Array.from(target.files).slice(0, 8)
+    // Compress all images in parallel
+    const compressedFiles = await Promise.all(
+      rawFiles.map((file) => compressImage(file))
+    )
+
+    files.value = compressedFiles
+    previews.value = files.value.map((file) => ({
+      file,
+      url: URL.createObjectURL(file)
+    }))
+    mainImageIndex.value = 0
+  } catch (err) {
+    console.error('Fehler bei der Bildverarbeitung:', err)
+  } finally {
+    isCompressing.value = false
+  }
 }
 
 function removePreviewImage(index: number) {
@@ -557,7 +580,7 @@ function canDelete(post: TradePost) {
 }
 
 async function upload() {
-  if (isUploading.value || uploadCooldown.value > 0) {
+  if (isUploading.value || isCompressing.value || uploadCooldown.value > 0) {
     return
   }
 
