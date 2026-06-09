@@ -67,7 +67,7 @@
           </div>
 
           <div class="form-group">
-            <label for="wishes">💡 Deine Wünsche (Optional)</label>
+            <label for="wishes"> Was wünscht du dir dafür? (Optional)</label>
             <textarea
                 id="wishes"
                 v-model="wishes"
@@ -237,7 +237,7 @@
                 alt="Hauptbild"
                 @click="openZoom(`/uploads/${selectedPost.mainImage}`)"
               >
-              <div class="zoom-hint">🔍 zum Vergrößern klicken</div>
+              <div class="zoom-hint"> zum Vergrößern klicken</div>
             </div>
 
             <h2>{{ selectedPost.title }}</h2>
@@ -251,7 +251,7 @@
             </p>
 
             <div v-if="selectedPost.wishes" class="modal-wishes">
-              <strong>💡 Wünsche:</strong>
+              <strong> Wünsche:</strong>
               <p>{{ selectedPost.wishes }}</p>
             </div>
 
@@ -284,7 +284,7 @@
 
           <div class="modal-right">
             <div class="chat-header">
-              <h3>💬 Verhandlungen</h3>
+              <h3> Verhandlungen</h3>
               <p class="chat-info">{{ messages.length }} {{ messages.length === 1 ? 'Nachricht' : 'Nachrichten' }}</p>
             </div>
 
