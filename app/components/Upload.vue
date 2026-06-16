@@ -531,10 +531,13 @@ async function previewImages(e: Event) {
 
   try {
     const rawFiles = Array.from(target.files).slice(0, 8)
-    // Compress all images in parallel
-    const compressedFiles = await Promise.all(
-      rawFiles.map((file) => compressImage(file))
-    )
+    
+    // Process all images sequentially to avoid browser tab memory crash on mobile devices
+    const compressedFiles: File[] = []
+    for (const file of rawFiles) {
+      const compressed = await compressImage(file)
+      compressedFiles.push(compressed)
+    }
 
     files.value = compressedFiles
     previews.value = files.value.map((file) => ({

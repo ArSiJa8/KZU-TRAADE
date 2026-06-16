@@ -29,6 +29,7 @@ export default defineEventHandler(async (event) => {
     const title = form.find((item) => item.name === 'title')?.data.toString().trim()
     const description = form.find((item) => item.name === 'description')?.data.toString().trim()
     const category = form.find((item) => item.name === 'category')?.data.toString().trim() as TradeCategory | undefined
+    const wishes = form.find((item) => item.name === 'wishes')?.data.toString().trim()
     const mainImageIndexRaw = form.find((item) => item.name === 'mainImageIndex')?.data.toString()
     const rulesAccepted = form.find((item) => item.name === 'rulesAccepted')?.data.toString() === 'true'
 
@@ -93,6 +94,7 @@ export default defineEventHandler(async (event) => {
         title,
         description,
         category,
+        wishes: wishes || undefined,
         images: savedImages,
         mainImage,
         ownerEmail: payload.login,
