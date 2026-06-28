@@ -44,5 +44,5 @@
     "@types/nodemailer": "^6.4.14",
     "vue-tsc": "^3.2.7"
   },
-  "packageManager": "pnpm@11.9.0",
+  "packageManager": "pnpm@11.9.0"
 }
