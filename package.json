@@ -44,7 +44,7 @@
     "@types/nodemailer": "^6.4.14",
     "vue-tsc": "^3.2.7"
   },
-  "packageManager": "pnpm@9.15.2"
+  "packageManager": "pnpm@9.15.2",
   "pnpm": {
     "supportedArchitectures": {
       "os": ["current", "linux"],
