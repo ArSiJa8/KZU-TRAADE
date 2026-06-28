@@ -1,6 +1,6 @@
 {
   "name": "KZU-TRAADE",
-  "packageManager": "pnpm@9.15.2",
+  "packageManager": "pnpm@11.9.0",
   "type": "module",
   "private": true,
   "scripts": {
