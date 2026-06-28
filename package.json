@@ -45,4 +45,10 @@
     "vue-tsc": "^3.2.7"
   },
   "packageManager": "pnpm@9.15.2"
+  "pnpm": {
+    "supportedArchitectures": {
+      "os": ["current", "linux"],
+      "cpu": ["current", "x64"]
+    }
+  }
 }
