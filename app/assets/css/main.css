@@ -91,6 +91,7 @@ html {
     color: var(--text-main);
     font-family: 'Inter', sans-serif;
     scroll-behavior: smooth;
+    margin: 0px;
 }
 
 /* Typography Hierarchy */
