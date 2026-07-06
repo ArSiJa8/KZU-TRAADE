@@ -1,12 +1,12 @@
 
 <script setup lang="ts">
 useSeoMeta({
-  title: 'KZU - Cryptocurrency Trading Plattform',
-  ogTitle: 'KZU TRAADE - Sichere Krypto Trading Plattform',
-  description: 'KZU TRAADE ist die moderne Plattform für Kryptowährungshandel. Traden Sie Bitcoin, Ethereum und 1000+ Kryptowährungen mit KZU.',
-  ogDescription: 'Traden Sie Kryptowährungen sicher auf KZU TRAADE',
+  title: 'KZU - Tausche dinge ohne Geld!',
+  ogTitle: 'KZU TRAADE - Tauschbörse für die Kantonsschule Zürcher Unterland in Bülach',
+  description: 'KZU TRADE ist eine moderne, digitale Tauschbörse für die KZU. - Ohne Geld!',
+  ogDescription: 'Tauschen sie alte Schulbücher oder andere Dinge die sie nicht mehr brauchen gegen neue!',
   ogImage: 'https://kzu-trade.ch/og-image.jpg',
-  keywords: 'KZU, KZU TRAADE, Kryptohandel, Bitcoin, Ethereum, Trading, Kryptowährung'
+  keywords: 'KZU, KZU TRADE, Kantonsschule Zürcher Unterland, Bülach, Tauschen, Trading, Tauschbörse'
 })
 </script>
 
