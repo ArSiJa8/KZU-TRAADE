@@ -298,7 +298,7 @@ defineExpose({
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 0.5rem;
+  border-radius: 50%;
   transition: all 0.2s ease;
 }
 
