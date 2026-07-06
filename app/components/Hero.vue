@@ -3,7 +3,7 @@
 <template>
     <div class="hero">
         <h1>KZU Trade</h1>
-        <p class="hero-subtitle">Tauschen anstatt wegwerfen</p>
+        <p class="hero-subtitle">Tauschen statt wegwerfen</p>
     </div>
 </template>
 
