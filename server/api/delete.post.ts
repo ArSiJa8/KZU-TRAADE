@@ -1,15 +1,15 @@
 import { deleteFromS3 } from '../utils/s3'
 
-function getObjectKeyFromUrl(url: string): string {
-    // URL format: https://pub-xxx.r2.dev/<filename> (no bucket in path)
+function getObjectKeyFromUrl(urlOrKey: string): string {
+    // New entries store just the object key (e.g. "1234_abc.jpg")
+    // Legacy entries may still have full URLs – handle both
     try {
-        const parsed = new URL(url)
-        // pathname is /<filename> → remove leading slash
+        const parsed = new URL(urlOrKey)
         const parts = parsed.pathname.split('/').filter(Boolean)
         return parts.join('/')
     } catch {
-        // Fallback: treat as plain filename
-        return url
+        // Not a URL – already a plain object key
+        return urlOrKey
     }
 }
 

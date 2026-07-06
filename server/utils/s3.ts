@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3'
+import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3'
 
 let s3Client: S3Client | null = null
 
@@ -26,12 +26,10 @@ export function getBucket(): string {
     return process.env.MINIO_BUCKET || 'uploads'
 }
 
-export function getMinioPublicUrl(objectKey: string): string {
-    const publicUrl = process.env.MINIO_PUBLIC_URL || ''
-    // Public URL format: https://pub-xxx.r2.dev/<filename> (no bucket in path)
-    return `${publicUrl.replace(/\/$/, '')}/${objectKey}`
-}
-
+/**
+ * Upload a file to MinIO and return the object key.
+ * Images are served via the /uploads/ proxy route on the Nuxt server.
+ */
 export async function uploadToS3(key: string, data: Buffer, contentType: string): Promise<string> {
     const client = getS3Client()
     const bucket = getBucket()
@@ -43,7 +41,21 @@ export async function uploadToS3(key: string, data: Buffer, contentType: string)
         ContentType: contentType,
     }))
 
-    return getMinioPublicUrl(key)
+    // Return just the object key – the /uploads/ proxy serves the file
+    return key
+}
+
+/**
+ * Stream a file from MinIO. Returns the S3 response with Body stream and metadata.
+ */
+export async function getFromS3(key: string) {
+    const client = getS3Client()
+    const bucket = getBucket()
+
+    return client.send(new GetObjectCommand({
+        Bucket: bucket,
+        Key: key,
+    }))
 }
 
 export async function deleteFromS3(key: string): Promise<void> {

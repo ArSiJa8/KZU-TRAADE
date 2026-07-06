@@ -1,6 +1,7 @@
 import type { Post, TradeCategory } from '../utils/repositories/types'
 import { uploadToS3 } from '../utils/s3'
 
+
 function getUserNameFromEmail(email: string) {
     if (email === 'admin') {
         return 'Admin'
@@ -55,7 +56,7 @@ export default defineEventHandler(async (event) => {
     }
 
     const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
-    const savedImageUrls: string[] = []
+    const savedImageKeys: string[] = []
 
     for (const file of files) {
         if (!allowed.includes(file.type || '')) {
@@ -71,11 +72,11 @@ export default defineEventHandler(async (event) => {
         const objectKey = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`
         const contentType = file.type || 'image/jpeg'
 
-        const publicUrl = await uploadToS3(objectKey, file.data, contentType)
-        savedImageUrls.push(publicUrl)
+        const savedKey = await uploadToS3(objectKey, file.data, contentType)
+        savedImageKeys.push(savedKey)
     }
 
-    const mainImage = savedImageUrls[mainImageIndex]
+    const mainImage = savedImageKeys[mainImageIndex]
 
     const newPost: Post = {
         id: `${Date.now()}_${Math.random().toString(36).slice(2)}`,
@@ -83,7 +84,7 @@ export default defineEventHandler(async (event) => {
         description,
         category,
         wishes: wishes || undefined,
-        images: savedImageUrls,
+        images: savedImageKeys,
         mainImage,
         ownerEmail: payload.login,
         ownerName: getUserNameFromEmail(payload.login),
