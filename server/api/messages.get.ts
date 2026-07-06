@@ -1,5 +1,4 @@
-import { readFile } from 'node:fs/promises'
-import path from 'node:path'
+import { ensureDb } from '../utils/db'
 
 type Message = {
     id: string
@@ -10,17 +9,6 @@ type Message = {
     createdAt: string
 }
 
-const messagesFile = path.join(process.cwd(), 'server', 'data', 'messages.json')
-
-async function readMessages(): Promise<Message[]> {
-    try {
-        const content = await readFile(messagesFile, 'utf-8')
-        return JSON.parse(content) as Message[]
-    } catch {
-        return []
-    }
-}
-
 export default defineEventHandler(async (event) => {
     const query = getQuery(event)
     const postId = query.postId as string
@@ -28,15 +16,27 @@ export default defineEventHandler(async (event) => {
     if (!postId) {
         return {
             error: 'Post ID erforderlich',
-            messages: []
+            messages: [],
         }
     }
 
-    const messages = await readMessages()
-    const postMessages = messages.filter(msg => msg.postId === postId)
+    const db = await ensureDb()
+    const result = await db.query(
+        'SELECT id, post_id, author, author_email, content, created_at FROM messages WHERE post_id = $1 ORDER BY created_at ASC',
+        [postId]
+    )
+
+    const messages: Message[] = result.rows.map((row: Record<string, string | undefined>) => ({
+        id: row.id!,
+        postId: row.post_id!,
+        author: row.author!,
+        authorEmail: row.author_email!,
+        content: row.content!,
+        createdAt: row.created_at!,
+    }))
 
     return {
         success: true,
-        messages: postMessages
+        messages,
     }
 })

@@ -1,6 +1,5 @@
-import { mkdir, writeFile } from 'node:fs/promises'
-import path from 'node:path'
 import type { Post, TradeCategory } from '../utils/repositories/types'
+import { uploadToS3 } from '../utils/s3'
 
 function getUserNameFromEmail(email: string) {
     if (email === 'admin') {
@@ -20,7 +19,7 @@ export default defineEventHandler(async (event) => {
     // Auth is already checked by middleware
     const payload = event.context.auth!
 
-    const form = await readMultipartFormData(event); 
+    const form = await readMultipartFormData(event)
 
     if (!form?.length) {
         throw createError({ statusCode: 400, statusMessage: 'Keine Daten erhalten' })
@@ -56,18 +55,7 @@ export default defineEventHandler(async (event) => {
     }
 
     const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
-    
-    const isProd = process.env.NODE_ENV === 'production'
-    let uploadDir = path.resolve('public/uploads')
-    
-    if (isProd) {
-        const prodPath = path.resolve('.output/public/uploads')
-        uploadDir = prodPath
-    }
-
-    await mkdir(uploadDir, { recursive: true }); 
-
-    const savedImages: string[] = []
+    const savedImageUrls: string[] = []
 
     for (const file of files) {
         if (!allowed.includes(file.type || '')) {
@@ -80,14 +68,14 @@ export default defineEventHandler(async (event) => {
 
         const original = file.filename || 'bild'
         const ext = original.includes('.') ? original.split('.').pop() : 'jpg'
-        const newName = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`
-        const uploadPath = path.join(uploadDir, newName)
+        const objectKey = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`
+        const contentType = file.type || 'image/jpeg'
 
-        await writeFile(uploadPath, file.data)
-        savedImages.push(newName)
+        const publicUrl = await uploadToS3(objectKey, file.data, contentType)
+        savedImageUrls.push(publicUrl)
     }
 
-    const mainImage = savedImages[mainImageIndex]
+    const mainImage = savedImageUrls[mainImageIndex]
 
     const newPost: Post = {
         id: `${Date.now()}_${Math.random().toString(36).slice(2)}`,
@@ -95,17 +83,17 @@ export default defineEventHandler(async (event) => {
         description,
         category,
         wishes: wishes || undefined,
-        images: savedImages,
+        images: savedImageUrls,
         mainImage,
         ownerEmail: payload.login,
         ownerName: getUserNameFromEmail(payload.login),
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
     }
 
     await postRepository.create(newPost)
 
     return {
         success: true,
-        post: newPost
+        post: newPost,
     }
 })

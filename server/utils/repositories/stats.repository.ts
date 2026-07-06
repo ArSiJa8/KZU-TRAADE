@@ -1,24 +1,23 @@
-import { BaseRepository } from './base.repository';
-import type { Stats } from './types';
+import { BaseRepository } from './base.repository'
+import type { Stats } from './types'
 
-export class StatsRepository extends BaseRepository<Stats> {
-    constructor() {
-        super('stats.json');
-    }
-
+export class StatsRepository extends BaseRepository {
     async getStats(): Promise<Stats> {
-        const stats = await this.readObject();
+        const db = await this.getDb()
+        const result = await db.query('SELECT total_views FROM stats WHERE id = 1')
+        const row = result.rows[0]
         return {
-            totalViews: stats.totalViews || 0
-        };
+            totalViews: row ? Number(row.total_views) : 0,
+        }
     }
 
     async incrementViews(): Promise<number> {
-        const stats = await this.getStats();
-        stats.totalViews++;
-        await this.writeObject(stats);
-        return stats.totalViews;
+        const db = await this.getDb()
+        const result = await db.query(
+            'UPDATE stats SET total_views = total_views + 1 WHERE id = 1 RETURNING total_views'
+        )
+        return Number(result.rows[0]?.total_views ?? 0)
     }
 }
 
-export const statsRepository = new StatsRepository();
+export const statsRepository = new StatsRepository()

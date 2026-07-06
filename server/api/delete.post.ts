@@ -1,5 +1,19 @@
-import { unlink } from 'node:fs/promises'
-import path from 'node:path'
+import { deleteFromS3 } from '../utils/s3'
+
+function getObjectKeyFromUrl(url: string): string {
+    // URL format: http://minio-host:9000/bucket/objectKey
+    // We need just the objectKey (everything after the bucket name)
+    try {
+        const parsed = new URL(url)
+        // pathname is /bucket/objectKey → remove leading /bucket/
+        const parts = parsed.pathname.split('/').filter(Boolean)
+        // parts[0] = bucket, parts[1..] = key segments
+        return parts.slice(1).join('/')
+    } catch {
+        // Fallback: treat as plain filename
+        return url
+    }
+}
 
 export default defineEventHandler(async (event) => {
     // Auth is already checked by middleware
@@ -21,22 +35,17 @@ export default defineEventHandler(async (event) => {
         throw createError({ statusCode: 403, statusMessage: 'Du darfst nur deine eigenen Posts löschen' })
     }
 
+    // Delete images from MinIO
     if (post.images) {
-        for (const image of post.images) {
-            const imageName = path.basename(image)
-            const imagePath = path.join(process.cwd(), 'public', 'uploads', imageName)
-
-            try {
-                await unlink(imagePath)
-            } catch {
-                // Bild wurde eventuell bereits gelöscht.
-            }
+        for (const imageUrl of post.images) {
+            const objectKey = getObjectKeyFromUrl(imageUrl)
+            await deleteFromS3(objectKey)
         }
     }
 
     await postRepository.delete(body.id)
 
     return {
-        success: true
+        success: true,
     }
 })

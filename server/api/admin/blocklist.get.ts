@@ -1,21 +1,15 @@
-import { readFile } from 'node:fs/promises'
-import path from 'node:path'
-
-const blocklistFile = path.join(process.cwd(), 'server', 'data', 'blocklist.json')
+import { ensureDb } from '../../utils/db'
 
 export async function readBlocklist(): Promise<string[]> {
-    try {
-        const content = await readFile(blocklistFile, 'utf-8')
-        return JSON.parse(content) as string[]
-    } catch {
-        return []
-    }
+    const db = await ensureDb()
+    const result = await db.query('SELECT word FROM blocklist')
+    return result.rows.map((r: { word: string }) => r.word)
 }
 
 export default defineEventHandler(async () => {
     const words = await readBlocklist()
     return {
         success: true,
-        words
+        words,
     }
 })

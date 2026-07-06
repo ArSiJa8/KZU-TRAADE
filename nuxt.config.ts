@@ -133,7 +133,12 @@ export default defineNuxtConfig({
   },
 
   runtimeConfig: {
-    tokenSecret: process.env.TOKEN_SECRET || ''
+    tokenSecret: process.env.TOKEN_SECRET || '',
+    databaseUrl: process.env.DATABASE_URL || '',
+    minioEndpoint: process.env.MINIO_ENDPOINT || '',
+    minioAccessKey: process.env.MINIO_ACCESS_KEY || '',
+    minioSecretKey: process.env.MINIO_SECRET_KEY || '',
+    minioBucket: process.env.MINIO_BUCKET || 'uploads',
   },
 
   sentry: {

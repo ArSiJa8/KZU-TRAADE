@@ -1,6 +1,5 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
-import path from 'node:path'
 import jwt from 'jsonwebtoken'
+import { ensureDb } from '../utils/db'
 
 type TokenPayload = {
     login: string
@@ -22,30 +21,10 @@ type MessagesResult = {
     message?: Message
 }
 
-const messagesFile = path.join(process.cwd(), 'server', 'data', 'messages.json')
-const blocklistFile = path.join(process.cwd(), 'server', 'data', 'blocklist.json')
-
-async function readMessages(): Promise<Message[]> {
-    try {
-        const content = await readFile(messagesFile, 'utf-8')
-        return JSON.parse(content) as Message[]
-    } catch {
-        return []
-    }
-}
-
 async function readBlocklist(): Promise<string[]> {
-    try {
-        const content = await readFile(blocklistFile, 'utf-8')
-        return JSON.parse(content) as string[]
-    } catch {
-        return []
-    }
-}
-
-async function writeMessages(messages: Message[]) {
-    await mkdir(path.dirname(messagesFile), { recursive: true })
-    await writeFile(messagesFile, JSON.stringify(messages, null, 2))
+    const db = await ensureDb()
+    const result = await db.query('SELECT word FROM blocklist')
+    return result.rows.map((r: { word: string }) => r.word)
 }
 
 function getUserNameFromEmail(email: string) {
@@ -67,51 +46,36 @@ export default defineEventHandler(async (event): Promise<MessagesResult> => {
     const tokenSecret = config.tokenSecret
 
     if (!tokenSecret) {
-        return {
-            error: 'Server nicht korrekt konfiguriert'
-        }
+        return { error: 'Server nicht korrekt konfiguriert' }
     }
 
-    // Token aus Header holen
     const authHeader = getHeader(event, 'authorization')
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return {
-            error: 'Authentifizierung erforderlich'
-        }
+        return { error: 'Authentifizierung erforderlich' }
     }
 
     const token = authHeader.slice(7)
 
-    // Token verifizieren
     let payload: TokenPayload
     try {
         payload = jwt.verify(token, tokenSecret) as TokenPayload
     } catch {
-        return {
-            error: 'Ungültiger oder abgelaufener Token'
-        }
+        return { error: 'Ungültiger oder abgelaufener Token' }
     }
 
-    // Request Body parsen
     const body = await readBody(event)
     const { postId, content } = body
 
     if (!postId || !content) {
-        return {
-            error: 'Post ID und Nachrichtentext erforderlich'
-        }
+        return { error: 'Post ID und Nachrichtentext erforderlich' }
     }
 
     if (typeof content !== 'string' || content.trim().length === 0) {
-        return {
-            error: 'Nachricht darf nicht leer sein'
-        }
+        return { error: 'Nachricht darf nicht leer sein' }
     }
 
     if (content.length > 2000) {
-        return {
-            error: 'Nachricht darf maximal 2000 Zeichen lang sein'
-        }
+        return { error: 'Nachricht darf maximal 2000 Zeichen lang sein' }
     }
 
     let finalContent = content.trim()
@@ -123,23 +87,23 @@ export default defineEventHandler(async (event): Promise<MessagesResult> => {
         finalContent = '[GEBLOCKTER INHALT]'
     }
 
-    // Neue Nachricht erstellen
     const message: Message = {
         id: `${Date.now()}_${Math.random().toString(36).slice(2)}`,
         postId,
         author: getUserNameFromEmail(payload.login),
         authorEmail: payload.login,
         content: finalContent,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
     }
 
-    // Nachrichten speichern
-    const messages = await readMessages()
-    messages.push(message)
-    await writeMessages(messages)
+    const db = await ensureDb()
+    await db.query(
+        'INSERT INTO messages (id, post_id, author, author_email, content, created_at) VALUES ($1, $2, $3, $4, $5, $6)',
+        [message.id, message.postId, message.author, message.authorEmail, message.content, message.createdAt]
+    )
 
     return {
         success: true,
-        message
+        message,
     }
 })
