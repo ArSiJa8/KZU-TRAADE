@@ -185,7 +185,7 @@ function logout() {
           Galerie
         </NuxtLink>
 
-        <NuxtLink to="/#about" @click="closeMenus">
+        <NuxtLink to="/about" @click="closeMenus">
           Über uns
         </NuxtLink>
 

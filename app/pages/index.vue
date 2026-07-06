@@ -14,7 +14,6 @@ useSeoMeta({
   <div style="min-height: 200vh;">
   <Hero />
   <Transition1 />
-  <About />
   <Upload />
   </div>
 </template>
