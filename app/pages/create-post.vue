@@ -1,7 +1,7 @@
 <template>
   <div class="create-post-container">
     <div class="create-post-card glass-panel">
-      <h1>📝 Neuen Post erstellen</h1>
+      <h1><Icon name="mdi:pencil-outline" /> Neuen Post erstellen</h1>
 
       <!-- Fehler anzeigen -->
       <div v-if="error" class="error-message">
@@ -43,16 +43,16 @@
           <label for="category">Kategorie *</label>
           <select id="category" v-model="form.category" required>
             <option value="">-- Wähle eine Kategorie --</option>
-            <option value="feature">✨ Feature (Neue Funktion)</option>
-            <option value="bug">🐛 Bug (Fehler)</option>
-            <option value="design">🎨 Design (Optik/UX)</option>
-            <option value="other">📌 Sonstiges</option>
+            <option value="feature">Feature (Neue Funktion)</option>
+            <option value="bug">Bug (Fehler)</option>
+            <option value="design">Design (Optik/UX)</option>
+            <option value="other">Sonstiges</option>
           </select>
         </div>
 
         <!-- NEUE WÜNSCHE SECTION -->
         <div class="form-group">
-          <label for="wishes">💡 Deine Wünsche (Optional)</label>
+          <label for="wishes"><Icon name="mdi:lightbulb-on-outline" /> Deine Wünsche (Optional)</label>
           <textarea
             id="wishes"
             v-model="form.wishes"
