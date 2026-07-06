@@ -5,6 +5,7 @@
 <template>
   <div class="hero">
     <h1>KZU Trade</h1>
+    <p class="hero-subtitle">Hier kommt dein Untertitel hin</p>
   </div>
 
 </template>
@@ -35,6 +36,15 @@
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
+}
+
+.hero-subtitle {
+  font-size: clamp(1.2rem, 3vw, 2rem);
+  font-weight: 500;
+  margin-top: 1rem;
+  color: var(--neutral-300);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  animation: fadeIn 1.5s ease-out;
 }
 
 .transition {
