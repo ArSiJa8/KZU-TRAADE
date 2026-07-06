@@ -139,6 +139,7 @@ export default defineNuxtConfig({
     minioAccessKey: process.env.MINIO_ACCESS_KEY || '',
     minioSecretKey: process.env.MINIO_SECRET_KEY || '',
     minioBucket: process.env.MINIO_BUCKET || 'uploads',
+    minioPublicUrl: process.env.MINIO_PUBLIC_URL || '',
   },
 
   sentry: {

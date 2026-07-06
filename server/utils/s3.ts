@@ -27,10 +27,9 @@ export function getBucket(): string {
 }
 
 export function getMinioPublicUrl(objectKey: string): string {
-    const endpoint = process.env.MINIO_ENDPOINT || ''
-    const bucket = getBucket()
-    // Remove trailing slash from endpoint
-    return `${endpoint.replace(/\/$/, '')}/${bucket}/${objectKey}`
+    const publicUrl = process.env.MINIO_PUBLIC_URL || ''
+    // Public URL format: https://pub-xxx.r2.dev/<filename> (no bucket in path)
+    return `${publicUrl.replace(/\/$/, '')}/${objectKey}`
 }
 
 export async function uploadToS3(key: string, data: Buffer, contentType: string): Promise<string> {

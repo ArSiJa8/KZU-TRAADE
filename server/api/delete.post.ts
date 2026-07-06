@@ -1,14 +1,12 @@
 import { deleteFromS3 } from '../utils/s3'
 
 function getObjectKeyFromUrl(url: string): string {
-    // URL format: http://minio-host:9000/bucket/objectKey
-    // We need just the objectKey (everything after the bucket name)
+    // URL format: https://pub-xxx.r2.dev/<filename> (no bucket in path)
     try {
         const parsed = new URL(url)
-        // pathname is /bucket/objectKey → remove leading /bucket/
+        // pathname is /<filename> → remove leading slash
         const parts = parsed.pathname.split('/').filter(Boolean)
-        // parts[0] = bucket, parts[1..] = key segments
-        return parts.slice(1).join('/')
+        return parts.join('/')
     } catch {
         // Fallback: treat as plain filename
         return url
