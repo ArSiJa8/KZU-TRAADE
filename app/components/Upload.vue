@@ -1205,6 +1205,7 @@ button:disabled {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  text-align: left;
 }
 
 .image-container {
@@ -1489,24 +1490,29 @@ button:disabled {
   position: absolute;
   top: 12px;
   right: 12px;
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  box-shadow: none;
+  box-sizing: border-box;
+  background: rgba(255, 255, 255, 0.1);
   border: none;
-  background: transparent;
   color: var(--text-main);
   font-size: 24px;
+  line-height: 1;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
   transition: all 0.2s ease;
-  z-index: 1;
+  z-index: 10;
 }
 
 .close-btn:hover {
   background: var(--danger);
   color: white;
+  box-shadow: none;
 }
 
 .zoom-backdrop {
