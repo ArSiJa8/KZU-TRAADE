@@ -6,6 +6,10 @@
     <div class="about-container" id="about">
         <div class="about-hero">
             <h1>Über KZU-TRAADE</h1>
+            <h6>
+                (Dies ist noch provisorisch und die Texte sind KI, das wird
+                durch eine anleitung ersetzt werden)
+            </h6>
             <p class="subtitle">
                 Die Tauschplattform von Schülern für Schüler an der
                 Kantonsschule Zürcher Unterland.
@@ -15,7 +19,7 @@
         <div class="about-content">
             <div class="about-card glass-panel">
                 <div class="card-icon">
-                    <Icon name="circle-flags:soviet-union" />
+                    <Icon name="ph:leaf-duotone" />
                 </div>
                 <h2>Nachhaltigkeit leben</h2>
                 <p>
