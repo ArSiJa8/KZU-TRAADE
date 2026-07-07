@@ -318,6 +318,15 @@
                         </div>
 
                         <button
+                            v-if="canComplete(selectedPost)"
+                            class="modal-complete-btn"
+                            type="button"
+                            @click="completeTrade(selectedPost.id)"
+                        >
+                            ✅ Handel abgeschlossen
+                        </button>
+
+                        <button
                             v-if="canDelete(selectedPost)"
                             class="modal-delete-btn"
                             type="button"
@@ -511,6 +520,7 @@ const isCompressing = ref(false);
 
 let uploadCooldownInterval: ReturnType<typeof setInterval> | null = null;
 let messagesPollingInterval: ReturnType<typeof setInterval> | null = null;
+let postsPollingInterval: ReturnType<typeof setInterval> | null = null;
 
 const uploadButtonText = computed(() => {
     if (isCompressing.value) {
@@ -534,6 +544,9 @@ onMounted(() => {
     login.value = localStorage.getItem("login");
     loadPosts();
 
+    // Poll for new/deleted posts from other users every 5 seconds
+    postsPollingInterval = setInterval(loadPosts, 5000);
+
     window.addEventListener("keydown", handleGlobalKeyDown);
 });
 
@@ -544,6 +557,10 @@ onBeforeUnmount(() => {
 
     if (messagesPollingInterval) {
         clearInterval(messagesPollingInterval);
+    }
+
+    if (postsPollingInterval) {
+        clearInterval(postsPollingInterval);
     }
 
     clearPreviews();
@@ -664,7 +681,11 @@ function removePreviewImage(index: number) {
 }
 
 function canDelete(post: TradePost) {
-    return role.value === "admin" || post.ownerEmail === login.value;
+    return role.value === "admin";
+}
+
+function canComplete(post: TradePost) {
+    return post.ownerEmail === login.value;
 }
 
 async function upload() {
@@ -735,7 +756,12 @@ async function upload() {
         resetForm();
         newPostOpen.value = false;
 
-        await loadPosts();
+        // Optimistic update: prepend new post locally so the gallery updates instantly
+        if (res.post) {
+            posts.value = [res.post as TradePost, ...posts.value];
+        } else {
+            await loadPosts();
+        }
     } catch (err: any) {
         console.error("Upload error:", err);
 
@@ -799,9 +825,7 @@ async function remove(id: string) {
     try {
         const res = await $fetch<ApiResult>("/api/delete", {
             method: "POST",
-            body: {
-                id,
-            },
+            body: { id },
             headers: {
                 Authorization: `Bearer ${token.value}`,
             },
@@ -812,11 +836,11 @@ async function remove(id: string) {
             return;
         }
 
+        // Optimistic update: remove from local list instantly
+        posts.value = posts.value.filter((p) => p.id !== id);
         if (selectedPost.value?.id === id) {
             selectedPost.value = null;
         }
-
-        await loadPosts();
     } catch (err: any) {
         const message =
             err.data?.statusMessage ||
@@ -824,6 +848,49 @@ async function remove(id: string) {
             err.message ||
             "Löschen fehlgeschlagen";
         alert(`Fehler beim Löschen: ${message}`);
+    }
+}
+
+async function completeTrade(id: string) {
+    if (!token.value) {
+        alert("Bitte zuerst einloggen");
+        return;
+    }
+
+    if (
+        !confirm(
+            "Handel als abgeschlossen markieren? Der Post wird danach gelöscht.",
+        )
+    ) {
+        return;
+    }
+
+    try {
+        const res = await $fetch<ApiResult>("/api/delete", {
+            method: "POST",
+            body: { id },
+            headers: {
+                Authorization: `Bearer ${token.value}`,
+            },
+        });
+
+        if (res.error) {
+            alert(res.error);
+            return;
+        }
+
+        // Optimistic update: remove from local list instantly
+        posts.value = posts.value.filter((p) => p.id !== id);
+        if (selectedPost.value?.id === id) {
+            selectedPost.value = null;
+        }
+    } catch (err: any) {
+        const message =
+            err.data?.statusMessage ||
+            err.statusMessage ||
+            err.message ||
+            "Fehler";
+        alert(`Fehler: ${message}`);
     }
 }
 
@@ -1446,6 +1513,26 @@ button:disabled {
 .modal-delete-btn:hover {
     background-color: var(--danger-hover);
     transform: scale(1.05);
+}
+
+.modal-complete-btn {
+    align-self: flex-start;
+    background-color: var(--green-600);
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.2s ease;
+    box-shadow: none;
+}
+
+.modal-complete-btn:hover {
+    background-color: var(--green-500);
+    transform: scale(1.05);
+    box-shadow: none;
 }
 
 .modal-right {
