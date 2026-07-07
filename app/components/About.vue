@@ -7,8 +7,8 @@
         <div class="about-hero">
             <h1>Über KZU-TRAADE</h1>
             <h6>
-                (Dies ist noch provisorisch und die Texte sind KI, das wird
-                durch eine anleitung ersetzt werden)
+                (Dies ist noch provisorisch und die Über Uns Texte sind KI, das
+                wird durch eine anleitung ersetzt werden)
             </h6>
             <p class="subtitle">
                 Die Tauschplattform von Schülern für Schüler an der
