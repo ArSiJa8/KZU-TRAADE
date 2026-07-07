@@ -1707,10 +1707,31 @@ button:disabled {
         height: 180px;
     }
 
+    /* On mobile the backdrop scrolls the whole modal — no inner scroll */
+    .modal-backdrop,
+    .new-post-backdrop {
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding: 0;
+    }
+
     .modal,
     .new-post-modal {
+        max-height: none; /* let the modal grow to its natural height */
+        overflow-y: visible; /* backdrop handles scrolling, not the modal */
+        border-radius: 0;
+        width: 100%;
         padding: 16px;
-        border-radius: 8px;
+        padding-top: 56px; /* room for the always-visible close button */
+    }
+
+    /* Pin the close button so it stays reachable regardless of scroll */
+    .close-btn {
+        position: fixed;
+        top: 12px;
+        right: 12px;
+        z-index: 1010;
     }
 
     .modal-left {
@@ -1743,9 +1764,10 @@ button:disabled {
     .modal,
     .new-post-modal {
         width: 100%;
-        max-height: 100vh;
+        max-height: none; /* already handled by the 768px rule */
         border-radius: 0;
         padding: 12px;
+        padding-top: 56px; /* keep room for the fixed close button */
     }
 
     .modal-main-image {
