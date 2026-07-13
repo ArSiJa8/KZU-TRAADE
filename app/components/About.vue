@@ -6,53 +6,76 @@
     <div class="about-container" id="about">
         <div class="about-hero">
             <h1>Über KZU-TRAADE</h1>
-            <h6>
-                (Dies ist noch provisorisch und die Über Uns Texte sind KI, das
-                wird durch eine anleitung ersetzt werden)
-            </h6>
             <p class="subtitle">
-                Die Tauschplattform von Schülern für Schüler an der
-                Kantonsschule Zürcher Unterland.
+                Die digitale Tauschbörse für Schülerinnen und Schüler der
+                Kantonsschule Zürcher Unterland in Bülach – tauschen statt
+                wegwerfen, ganz ohne Geld.
             </p>
         </div>
 
+        <div class="about-intro glass-panel">
+            <p>
+                KZU-TRAADE ist eine Plattform, auf der Schülerinnen und Schüler
+                der KZU Gegenstände untereinander tauschen können – kostenlos
+                und ohne Geld. Statt alte Schulbücher, Stifte oder
+                Sportmaterialien wegzuwerfen, können sie direkt auf dem Campus
+                mit Mitschülerinnen und Mitschülern getauscht werden.
+            </p>
+            <p class="motto">Tauschen statt wegwerfen.</p>
+        </div>
+
         <div class="about-content">
-            <div class="about-card glass-panel">
-                <div class="card-icon">
-                    <Icon name="ph:leaf-duotone" />
+            <div class="about-item">
+                <span class="item-num">01</span>
+                <div class="item-body">
+                    <h2>Nachhaltig</h2>
+                    <p>
+                        Dinge bekommen ein zweites Leben statt im Müll zu
+                        landen. Schulbücher, Stifte, Hefte, Sportmaterialien –
+                        alles was du nicht mehr brauchst, kann jemand anderen
+                        glücklich machen.
+                    </p>
                 </div>
-                <h2>Nachhaltigkeit leben</h2>
-                <p>
-                    Warum neu kaufen, wenn man tauschen kann? KZU-TRAADE hilft
-                    dabei, Büchern, Stiften und Sportmaterialien ein zweites
-                    Leben zu geben und so unseren ökologischen Fußabdruck zu
-                    verringern.
-                </p>
             </div>
 
-            <div class="about-card glass-panel">
-                <div class="card-icon">
-                    <Icon name="ph:users-three-duotone" />
+            <div class="about-item">
+                <span class="item-num">02</span>
+                <div class="item-body">
+                    <h2>Von Schülern für Schüler</h2>
+                    <p>
+                        KZU-TRAADE richtet sich ausschliesslich an Schülerinnen
+                        und Schüler der KZU. Die Plattform wurde von Schülern
+                        gebaut und lebt durch die Community.
+                    </p>
                 </div>
-                <h2>Gemeinschaft stärken</h2>
-                <p>
-                    Tauschen verbindet. Lerne neue Mitschüler kennen und
-                    profitiere von der starken KZU-Community. Ein Ort, an dem
-                    sich Schüler gegenseitig unterstützen.
-                </p>
             </div>
 
-            <div class="about-card glass-panel">
-                <div class="card-icon">
-                    <Icon name="ph:map-pin-line-duotone" />
+            <div class="about-item">
+                <span class="item-num">03</span>
+                <div class="item-body">
+                    <h2>Einfach & Lokal</h2>
+                    <p>
+                        Kein Versand, kein Geld, keine Komplikationen. Der
+                        Tausch findet direkt auf dem KZU-Campus statt –
+                        persönlich und unkompliziert.
+                    </p>
                 </div>
-                <h2>Einfach & Lokal</h2>
-                <p>
-                    Kein Postversand, keine komplizierten Zahlungen. Der Tausch
-                    findet direkt auf dem Campus statt. Von Schülern für Schüler
-                    – unkompliziert und direkt.
-                </p>
             </div>
+        </div>
+
+        <div class="about-how glass-panel">
+            <h2>So funktioniert es</h2>
+            <ol>
+                <li>Registrieren und einloggen</li>
+                <li>
+                    Post erstellen: Gegenstand beschreiben und Foto hochladen
+                </li>
+                <li>
+                    Mit einer anderen Person über die Nachrichtenfunktion in
+                    Kontakt treten
+                </li>
+                <li>Tausch direkt auf dem Campus abwickeln – fertig</li>
+            </ol>
         </div>
     </div>
 </template>
@@ -85,49 +108,100 @@
     margin: 0 auto;
 }
 
-.about-content {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
-}
-
-.about-card {
-    padding: 2.5rem;
+.about-intro {
+    padding: 2rem 2.5rem;
+    margin-bottom: 2rem;
     text-align: center;
-    transition:
-        transform 0.3s ease,
-        border-color 0.3s ease;
+    font-size: 1.05rem;
+    color: var(--text-main);
+    line-height: 1.7;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 1rem;
+    gap: 0.5rem;
 }
 
-.about-card:hover {
-    transform: translateY(-5px);
-    border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
+.about-intro p {
+    margin: 0;
 }
 
-.card-icon {
-    font-size: 3.5rem;
+.motto {
+    font-size: 1.25rem;
+    font-weight: 700;
     color: var(--accent);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 0.5rem;
+    letter-spacing: -0.01em;
 }
 
-.about-card h2 {
+.about-how {
+    margin-top: 2rem;
+    padding: 2.5rem;
+}
+
+.about-how h2 {
     font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--neutral-100);
+    margin: 0 0 1.25rem;
+}
+
+.about-how ol {
+    margin: 0;
+    padding-left: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    color: var(--text-main);
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+.about-content {
+    display: flex;
+    flex-direction: column;
+    margin: 2rem 0;
+}
+
+.about-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 2rem;
+    padding: 2rem 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.about-item:first-child {
+    border-top: 1px solid var(--border);
+}
+
+.item-num {
+    font-size: 3rem;
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1;
+    letter-spacing: -0.04em;
+    min-width: 4rem;
+    opacity: 0.5;
+}
+
+.item-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-top: 0.25rem;
+}
+
+.item-body h2 {
+    font-size: 1.25rem;
     font-weight: 700;
     margin: 0;
     color: var(--neutral-100);
 }
 
-.about-card p {
+.item-body p {
     margin: 0;
-    color: var(--text-main);
-    font-size: 1rem;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    max-width: 520px;
 }
 
 @keyframes fadeIn {
@@ -145,8 +219,14 @@
     .about-container {
         padding: 3rem 1.5rem 6rem;
     }
-    .about-card {
-        padding: 2rem;
+
+    .about-item {
+        gap: 1.25rem;
+    }
+
+    .item-num {
+        font-size: 2rem;
+        min-width: 2.5rem;
     }
 }
 </style>
