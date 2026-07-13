@@ -13,14 +13,6 @@
             </p>
         </div>
 
-        <p class="about-lead">
-            KZU-TRAADE ist eine Plattform, auf der Schülerinnen und Schüler der
-            KZU Gegenstände untereinander tauschen können – kostenlos und ohne
-            Geld. Statt alte Schulbücher, Stifte oder Sportmaterialien
-            wegzuwerfen, können sie direkt auf dem Campus mit Mitschülerinnen
-            und Mitschülern getauscht werden.
-        </p>
-
         <div class="about-content">
             <div class="about-item">
                 <span class="item-num">01</span>
