@@ -1,0 +1,46 @@
+# KZU-TRAADE
+
+> Die digitale Tauschbörse für Schülerinnen und Schüler der Kantonsschule Zürcher Unterland (KZU) in Bülach – tauschen statt wegwerfen, ganz ohne Geld.
+
+## Was ist KZU-TRADE?
+
+KZU-TRADE ist eine Plattform, auf der Schülerinnen und Schüler der KZU Gegenstände untereinander tauschen können – kostenlos und ohne Geld. Statt alte Schulbücher, Stifte oder Sportmaterialien wegzuwerfen, können sie direkt auf dem Campus mit Mitschülerinnen und Mitschülern getauscht werden.
+
+Das Motto lautet: **Tauschen statt wegwerfen.**
+
+## Für wen ist die Plattform?
+
+KZU-TRADE richtet sich ausschliesslich an Schülerinnen und Schüler der Kantonsschule Zürcher Unterland in Bülach. Die Plattform ist von Schülern für Schüler gebaut.
+
+## Was kann man auf KZU-TRADE tauschen?
+
+Typische Gegenstände, die getauscht werden:
+- Schulbücher (alte Jahrgänge, Pflichtlektüre usw.)
+- Schulmaterialien (Stifte, Hefte, Zeichenblöcke usw.)
+- Sportmaterialien
+- Sonstige Dinge, die man nicht mehr braucht
+
+## Wie funktioniert das Tauschen?
+
+1. Registrieren und einloggen
+2. Einen Post erstellen: Gegenstand beschreiben, Foto hochladen
+3. Mit einer anderen Person über die Nachrichtenfunktion in Kontakt treten
+4. Den Tausch direkt auf dem KZU-Campus abwickeln – kein Versand, keine Zahlung
+
+Der Tausch findet immer persönlich vor Ort statt.
+
+## Was bringt mir KZU-TRADE?
+
+- **Kostenlos:** Kein Geld nötig – Einfach etwas anbieten und etwas neues, dass man braucht dafür erhalten.
+- **Nachhaltig:** Dinge bekommen ein zweites Leben statt im Müll zu landen
+- **Einfach:** Direkt auf dem Campus, unkompliziert und schnell
+- **Community:** Neue Mitschülerinnen und Mitschüler kennenlernen
+
+## Feedback
+ & Mitmachen
+
+Wer einen Fehler entdeckt, eine Idee hat oder Feedback geben möchte, kann das direkt über die Feedback-Seite tun. Das Team freut sich über jede Rückmeldung – ob Bug-Meldung, Feature-Wunsch oder Design-Feedback.
+
+## Website
+
+https://kzu-trade.ch
