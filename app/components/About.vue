@@ -13,16 +13,13 @@
             </p>
         </div>
 
-        <div class="about-intro glass-panel">
-            <p>
-                KZU-TRAADE ist eine Plattform, auf der Schülerinnen und Schüler
-                der KZU Gegenstände untereinander tauschen können – kostenlos
-                und ohne Geld. Statt alte Schulbücher, Stifte oder
-                Sportmaterialien wegzuwerfen, können sie direkt auf dem Campus
-                mit Mitschülerinnen und Mitschülern getauscht werden.
-            </p>
-            <p class="motto">Tauschen statt wegwerfen.</p>
-        </div>
+        <p class="about-lead">
+            KZU-TRAADE ist eine Plattform, auf der Schülerinnen und Schüler der
+            KZU Gegenstände untereinander tauschen können – kostenlos und ohne
+            Geld. Statt alte Schulbücher, Stifte oder Sportmaterialien
+            wegzuwerfen, können sie direkt auf dem Campus mit Mitschülerinnen
+            und Mitschülern getauscht werden.
+        </p>
 
         <div class="about-content">
             <div class="about-item">
@@ -108,27 +105,12 @@
     margin: 0 auto;
 }
 
-.about-intro {
-    padding: 2rem 2.5rem;
-    margin-bottom: 2rem;
-    text-align: center;
-    font-size: 1.05rem;
-    color: var(--text-main);
-    line-height: 1.7;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.about-intro p {
-    margin: 0;
-}
-
-.motto {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: var(--accent);
-    letter-spacing: -0.01em;
+.about-lead {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    line-height: 1.75;
+    max-width: 640px;
+    margin: 0 0 1rem;
 }
 
 .about-how {
